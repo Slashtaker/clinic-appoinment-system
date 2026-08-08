@@ -1,43 +1,52 @@
 # include <iostream>
 # include <string>
+# include <iomanip>
+# include <algorithm>
 
 using namespace std;
 
-// =============================================================
-// GLOBAL CONSTANTS
-// =============================================================
-const int MAX_RECORDS = 100;    // capacity per module (assignment requires at least 50)
-const int APPT_FIELDS  = 6;     // number of columns in the appointment 2D array
-const int COL_ID      = 0;
-const int COL_PATIENT = 1;
-const int COL_DOCTOR  = 2;
-const int COL_DATE    = 3;
-const int COL_TIME    = 4;
-const int COL_STATUS  = 5;
+enum Gender {
+    MALE,
+    FEMALE,
+};
+
+struct Patient {
+    string id;
+    string name;
+    int age;
+    Gender gender;
+    string phone;
+};
+
+struct Doctor {
+    string id;
+    string name;
+    string specialty;
+    double fee;
+};
+
+struct Appointment {
+    string id; // generated automatically
+    Patient patient;
+    Doctor doctor;
+    string date;
+    string time;
+};
+
+
+
 
 // =============================================================
 // GLOBAL DATA STORE  (shared by all 4 modules)
 // =============================================================
 
-string patientID[MAX_RECORDS];
-string patientName[MAX_RECORDS];
-int    patientAge[MAX_RECORDS];
-char   patientGender[MAX_RECORDS];
-string patientPhone[MAX_RECORDS];
-int    patientCount = 0;
 
-string doctorID[MAX_RECORDS];
-string doctorName[MAX_RECORDS];
-string doctorSpecialty[MAX_RECORDS];
-double doctorFee[MAX_RECORDS];
-int    doctorCount = 0;
-
-string appointment[MAX_RECORDS][APPT_FIELDS];
-int appointmentCount = 0;
 
 // =============================================================
 // FUNCTION PROTOTYPES
 // =============================================================
+
+void displayHeader(string title);
 // ---- Module 1: Patient Management (Student A) ----
 
 void patientMenu();
@@ -65,7 +74,7 @@ void appointmentMenu();
 void createAppointment();
 void cancelAppointment();
 void modifyAppointment();
-int  searchAppointmentByID(string id);   // Linear Search -> returns index or -1
+int  searchAppointmentByID(string id);   // Linear Search -> returns index or -1'
 void displayAllAppointments();
 string generateAppointmentID();
 
@@ -84,4 +93,55 @@ void displayMainMenu();
 // MAIN PROGRAM
 // =============================================================
 
-int main(){}
+int main(){
+    
+}
+
+void displayHeader(string title) {
+    cout << "=========================================================" << endl;
+    cout << setw(29 + (title.length() / 2)) << title << endl;
+    cout << "=========================================================" << endl;
+}
+
+bool InputValidation(string input, string type) {
+    std::transform(type.begin(), type.end(), type.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    });
+    // Validate string input
+    if (type == "string"){
+        if (input.empty()) {
+            return false;
+        } 
+    // Validate char input
+    } else if (type == "char") {
+        if (input.length() != 1 || !isalpha(input[0])) {
+            return false;
+        }
+    // Validate int input
+    } else if (type == "int") {
+        try {
+            std::stoi(input);
+        } catch (...) {
+            return false;
+        }
+    // Validate double input
+    } else if (type == "double") {
+        try {
+            std::stod(input);
+        } catch (...) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Module 3 - Appointment Booking 
+
+string generateAppointmentID() {
+    srand(time(0));
+    return "APT_" + to_string(rand()); // Generates a random appointment ID
+}
+
+void createAppointment(){
+    
+}
