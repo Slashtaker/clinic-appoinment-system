@@ -2,6 +2,7 @@
 # include <string>
 # include <iomanip>
 # include <algorithm>
+#include <vector>
 
 using namespace std;
 
@@ -34,13 +35,13 @@ struct Appointment {
 };
 
 
-
-
 // =============================================================
 // GLOBAL DATA STORE  (shared by all 4 modules)
 // =============================================================
 
-
+vector<Patient> LIST_patients;
+vector<Doctor> LIST_doctors;
+vector<Appointment> LIST_appointments;
 
 // =============================================================
 // FUNCTION PROTOTYPES
@@ -94,7 +95,7 @@ void displayMainMenu();
 // =============================================================
 
 int main(){
-    
+    srand(time(0)); // Seed the random number generator
 }
 
 void displayHeader(string title) {
@@ -138,10 +139,19 @@ bool InputValidation(string input, string type) {
 // Module 3 - Appointment Booking 
 
 string generateAppointmentID() {
-    srand(time(0));
     return "APT_" + to_string(rand()); // Generates a random appointment ID
 }
 
-void createAppointment(){
+void createAppointment(Doctor doctor, Patient patient) {
+    string date, time;
+
+    Appointment newAppointment;
+    newAppointment.id = generateAppointmentID();
+    newAppointment.doctor = doctor;
+    newAppointment.patient = patient;
+    newAppointment.date = date;
+    newAppointment.time = time;
+
+    LIST_appointments.push_back(newAppointment);
     
 }
