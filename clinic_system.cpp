@@ -197,6 +197,11 @@ bool timeValidation(string time) {
 
     return true;
 }
+// ---- Module 1:User/Record Management Module(Student A) ----
+
+
+
+
 // ---- Module 3: Appointment Booking (Student C) ----
 
 void appointmentMenu() {
