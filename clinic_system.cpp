@@ -1,3 +1,4 @@
+#include <fstream>
 # include <iostream>
 # include <string>
 # include <iomanip>
@@ -8,7 +9,9 @@
 using namespace std;
 
 enum Gender { MALE, FEMALE };
-enum Status { ASSIGNED, CANCELLED};
+enum Status { ASSIGNED, CANCELLED };
+enum File_Type { PATIENT, DOCTOR, MEDICINE, APPOINTMENT};
+enum File_Status { SUCCESS, FAILURE };
 
 struct PatientRecord
 {
@@ -27,6 +30,14 @@ struct DoctorRecord
     double fee;
 };
 
+struct MedicineRecord
+{
+    string id;
+    string name;
+    string description;
+    double price;
+};
+
 struct AppointmentRecord
 {
     string id;
@@ -39,10 +50,15 @@ struct AppointmentRecord
 
 // GLOBAL CONSTANTS
 const int MAX_RECORDS = 100;    // capacity per module (assignment requires at least 50)
+const string Patient_file_path = "patient.csv";
+const string Doctor_file_path = "doctor.csv";
+const string Medicine_file_path = "medicine.csv";
+const string Appointment_file_path = "appointment.csv";
 
 // GLOBAL DATA STORE
 vector<PatientRecord> patient_record;
 vector<DoctorRecord> doctor_record;
+vector<MedicineRecord> medicine_record;
 vector<AppointmentRecord> appointment_record;
 
 // FUNCTIONS
@@ -59,10 +75,18 @@ void doctorMenu();
 void addDoctor();
 void updateDoctor();
 void deleteDoctor();
-int  searchDoctorByID(string id);  
+int  searchDoctorByID(string& id);
 void displayAllDoctors();
 
 // ---- Module 2: Medicine Management ----
+
+void medicineMenu();
+void addMedicine();
+void updateMedicine();
+void deleteMedicine();
+int  searchMedicineByID(string& id);
+int  searchMedicineByName(const string& name);
+void displayAllMedicines();
 
 // ---- Module 3: Appointment Booking ----
 
@@ -86,14 +110,22 @@ double calculateTotalRevenue();
 void displayMainMenu();
 
 //Utilities tool
+vector<string> SimpleCsvParser(string& line, File_Type file_type);
 void displayHeader(string title);
 bool dateValidation(string date);
 bool timeValidation(string time);
+
+// BONUS
+File_Status SaveData();
+File_Status LoadData();
+File_Status UpdateData(File_Type file_type);
 
 // MAIN PROGRAM
 
 int main() {
     int choice;
+
+    LoadData();
 
     do {
         cin.clear();
@@ -107,11 +139,17 @@ int main() {
             case 2: doctorMenu(); break;
             case 3: appointmentMenu(); break;
             case 4: reportMenu(); break;
-            case 5: break;
+            case 5:
+                if (SaveData() == FAILURE) {
+                    cout << "Failed to update data files." << endl;
+                }
+                cout << "Thank you for using the Clinic Management System.";
+                return 0;
             default: cout << "Invalid choice. Please try again." << endl;
         }
 
     } while (choice != 5);
+    return 0;
 }
 
 void displayMainMenu() {
@@ -127,6 +165,86 @@ void displayMainMenu() {
 }
 
 // Utilities tool
+vector<string> SimpleCsvParser(string& line, File_Type file_type) {
+    vector<string> result;
+    stringstream ss(line);
+    switch (file_type){
+        case PATIENT:{
+            // gender need to parse to Gender type after parse
+            string id, name, phone, gender, age;
+
+            getline(ss, id, ',');
+            getline(ss, name, ',');
+            getline(ss, age, ',');
+            getline(ss, gender, ',');
+            getline(ss, phone, ',');
+    
+            result.push_back(id);
+            result.push_back(name);
+            result.push_back(age);
+            result.push_back(gender);
+            result.push_back(phone);
+                
+            break;
+            }
+
+        case DOCTOR: {
+            string id, name, speciality, fee;
+            
+            getline(ss, id, ',');
+            getline(ss, name, ',');
+            getline(ss, speciality, ',');
+            getline(ss, fee, ',');
+
+            result.push_back(id);
+            result.push_back(name);
+            result.push_back(speciality);
+            result.push_back(fee);
+
+            break;
+        }
+
+        case MEDICINE: {
+            string id, name, description, price;
+
+            getline(ss, id, ',');
+            getline(ss, name, ',');
+            getline(ss, description, ',');
+            getline(ss, price, ',');
+
+            result.push_back(id);
+            result.push_back(name);
+            result.push_back(description);
+            result.push_back(price);
+
+            break;
+        }
+        case APPOINTMENT: {
+            string id, patient_id, doctor_id, date, time, status;
+
+            getline(ss, id, ',');
+            getline(ss, patient_id, ',');
+            getline(ss, doctor_id, ',');
+            getline(ss, date, ',');
+            getline(ss, time, ',');
+            getline(ss, status, ',');
+
+            result.push_back(id);
+            result.push_back(patient_id);
+            result.push_back(doctor_id);
+            result.push_back(date);
+            result.push_back(time);
+            result.push_back(status);
+
+            break;
+        }
+        default: return result;
+            break;
+    }
+
+    return result;
+}
+
 void displayHeader(string& title) {
     cout << "======================================" << endl;
     cout << setw(19 + title.length()/2) << title << endl;
@@ -197,6 +315,198 @@ bool timeValidation(string time) {
         return false;
 
     return true;
+}
+
+// BONUS
+File_Status SaveData() {
+    File_Status status = SUCCESS;
+    if (UpdateData(PATIENT) == FAILURE) status = FAILURE;
+    if (UpdateData(DOCTOR) == FAILURE) status = FAILURE;
+    if (UpdateData(MEDICINE) == FAILURE) status = FAILURE;
+    if (UpdateData(APPOINTMENT) == FAILURE) status = FAILURE;
+    return status;
+}
+
+File_Status LoadData() {
+    ifstream patient_file(Patient_file_path);
+    ifstream doctor_file(Doctor_file_path);
+    ifstream medicine_file(Medicine_file_path);
+    ifstream appointment_file(Appointment_file_path);
+
+    if (!patient_file || !doctor_file || !medicine_file || !appointment_file) {
+        return FAILURE;
+    }
+
+    vector<PatientRecord> loaded_patients;
+    vector<DoctorRecord> loaded_doctors;
+    vector<MedicineRecord> loaded_medicines;
+    vector<AppointmentRecord> loaded_appointments;
+
+    auto parse_int = [](const string& value, int& result) {
+        try {
+            size_t position = 0;
+            result = stoi(value, &position);
+            return position == value.length();
+        } catch (...) {
+            return false;
+        }
+    };
+
+    auto parse_double = [](const string& value, double& result) {
+        try {
+            size_t position = 0;
+            result = stod(value, &position);
+            return position == value.length();
+        } catch (...) {
+            return false;
+        }
+    };
+
+    string line;
+    while (getline(patient_file, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
+        vector<string> fields = SimpleCsvParser(line, PATIENT);
+        int age;
+        Gender gender;
+        if (fields.size() != 5 || fields[0].empty() || fields[1].empty() || fields[4].empty()
+            || !parse_int(fields[2], age) || age < 0) {
+            return FAILURE;
+        }
+
+        if (fields[3] == "Male") {
+            gender = MALE;
+        } else if (fields[3] == "Female") {
+            gender = FEMALE;
+        } else {
+            return FAILURE;
+        }
+
+        loaded_patients.push_back({fields[0], fields[1], age, gender, fields[4]});
+        if (loaded_patients.size() > MAX_RECORDS) {
+            return FAILURE;
+        }
+    }
+
+    while (getline(doctor_file, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
+        vector<string> fields = SimpleCsvParser(line, DOCTOR);
+        double fee;
+        if (fields.size() != 4 || fields[0].empty() || fields[1].empty() || fields[2].empty()
+            || !parse_double(fields[3], fee) || fee < 0) {
+            return FAILURE;
+        }
+
+        loaded_doctors.push_back({fields[0], fields[1], fields[2], fee});
+        if (loaded_doctors.size() > MAX_RECORDS) {
+            return FAILURE;
+        }
+    }
+
+    while (getline(medicine_file, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
+        vector<string> fields = SimpleCsvParser(line, MEDICINE);
+        double price;
+        if (fields.size() != 4 || fields[0].empty() || fields[1].empty() || fields[2].empty()
+            || !parse_double(fields[3], price) || price < 0) {
+            return FAILURE;
+        }
+
+        loaded_medicines.push_back({fields[0], fields[1], fields[2], price});
+        if (loaded_medicines.size() > MAX_RECORDS) {
+            return FAILURE;
+        }
+    }
+
+    while (getline(appointment_file, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
+        vector<string> fields = SimpleCsvParser(line, APPOINTMENT);
+        Status status;
+        if (fields.size() != 6 || fields[0].empty() || fields[1].empty() || fields[2].empty()
+            || fields[3].empty() || fields[4].empty()) {
+            return FAILURE;
+        }
+
+        if (fields[5] == "Assigned") {
+            status = ASSIGNED;
+        } else if (fields[5] == "Cancelled") {
+            status = CANCELLED;
+        } else {
+            return FAILURE;
+        }
+
+        loaded_appointments.push_back({fields[0], fields[1], fields[2], fields[3], fields[4], status});
+        if (loaded_appointments.size() > MAX_RECORDS) {
+            return FAILURE;
+        }
+    }
+
+    patient_record.swap(loaded_patients);
+    doctor_record.swap(loaded_doctors);
+    medicine_record.swap(loaded_medicines);
+    appointment_record.swap(loaded_appointments);
+
+    return SUCCESS;
+}
+
+File_Status UpdateData(File_Type file_type) {
+    switch (file_type) {
+        case PATIENT: {
+            ofstream file(Patient_file_path);
+            if (!file) return FAILURE;
+
+            for (const PatientRecord& record : patient_record) {
+                string gender = record.gender == MALE ? "Male" : "Female";
+                file << record.id << "," << record.name << "," << record.age << ","
+                     << gender << "," << record.phone << endl;
+            }
+            return file ? SUCCESS : FAILURE;
+        }
+        case DOCTOR: {
+            ofstream file(Doctor_file_path);
+            if (!file) return FAILURE;
+
+            for (const DoctorRecord& record : doctor_record) {
+                file << record.id << "," << record.name << "," << record.specialty << ","
+                     << record.fee << endl;
+            }
+            return file ? SUCCESS : FAILURE;
+        }
+        case MEDICINE: {
+            ofstream file(Medicine_file_path);
+            if (!file) return FAILURE;
+
+            for (const MedicineRecord& record : medicine_record) {
+                file << record.id << "," << record.name << "," << record.description << ","
+                     << record.price << endl;
+            }
+            return file ? SUCCESS : FAILURE;
+        }
+        case APPOINTMENT: {
+            ofstream file(Appointment_file_path);
+            if (!file) return FAILURE;
+
+            for (const AppointmentRecord& record : appointment_record) {
+                string status = record.status == ASSIGNED ? "Assigned" : "Cancelled";
+                file << record.id << "," << record.patient_id << "," << record.doctor_id << ","
+                     << record.date << "," << record.time << "," << status << endl;
+            }
+            return file ? SUCCESS : FAILURE;
+        }
+        default:
+            return FAILURE;
+    }
 }
 
 // Module 1:User/Record Management Module
@@ -319,6 +629,10 @@ void addPatient() {
 
     patient_record.push_back(PatientRecord{id, name, age, gender_type, phone});
 
+    if (UpdateData(PATIENT) == FAILURE) {
+        cout << "Failed to update patient data file." << endl;
+    }
+
     cout << "Patient added successfully. Patient ID: " << id << endl;
 }
 
@@ -411,6 +725,10 @@ void updatePatient(){
     patient_record[index].gender = gender_type;
     patient_record[index].phone = phone;
 
+    if (UpdateData(PATIENT) == FAILURE) {
+        cout << "Failed to update patient data file." << endl;
+    }
+
     cout << "Patient updated successfully. Patient ID: " << patient_record[index].id << endl;
 }
 
@@ -437,6 +755,11 @@ void deletePatient(){
         patient_record[i] = patient_record[i + 1];
     }
     patient_record.erase(patient_record.begin() + index);
+
+    if (UpdateData(PATIENT) == FAILURE) {
+        cout << "Failed to update patient data file." << endl;
+    }
+
     cout << "patient deleted successfully. Patient ID: " << id << endl;
 }
 
@@ -566,6 +889,10 @@ void addDoctor(){
 
     doctor_record.push_back({id, name, specialty, fee});
 
+    if (UpdateData(DOCTOR) == FAILURE) {
+        cout << "Failed to update doctor data file." << endl;
+    }
+
     cout << "Doctor added successfully. Doctor ID: " << id << endl;
 }
 
@@ -642,6 +969,10 @@ void updateDoctor(){
     doctor_record[index].specialty = specialty;
     doctor_record[index].fee = fee;
 
+    if (UpdateData(DOCTOR) == FAILURE) {
+        cout << "Failed to update doctor data file." << endl;
+    }
+
     cout << "Doctor updated successfully. Doctor ID: " << doctor_record[index].id << endl;
 }
 
@@ -669,6 +1000,11 @@ void deleteDoctor(){
         doctor_record[i] = doctor_record[i + 1];
     }
     doctor_record.erase(doctor_record.begin() + index);
+
+    if (UpdateData(DOCTOR) == FAILURE) {
+        cout << "Failed to update doctor data file." << endl;
+    }
+
     cout << "Doctor deleted successfully. Doctor ID: " << id << endl;
 }
 
@@ -775,6 +1111,10 @@ void createAppointment() {
 
     appointment_record.push_back(AppointmentRecord{generateAppointmentID(), patient_ID, doctor_ID, date, time, ASSIGNED});
 
+    if (UpdateData(APPOINTMENT) == FAILURE) {
+        cout << "Failed to update appointment data file." << endl;
+    }
+
     cout << endl;
     cout << "Your appointment ID is: " << appointment_record.back().id << endl;
     cout << "Patient ID and name: " << patient_ID << " " << patient_record[searchPatientByID(patient_ID)].name << endl;
@@ -804,6 +1144,11 @@ void cancelAppointment() {
     }
 
     appointment_record[searchAppointmentByID(appointment_ID)].status = CANCELLED;
+
+    if (UpdateData(APPOINTMENT) == FAILURE) {
+        cout << "Failed to update appointment data file." << endl;
+    }
+
     cout << "Appointment canceled successfully." << endl;
 }
 
@@ -848,6 +1193,10 @@ void modifyAppointment() {
 
                 appointment_record[searchAppointmentByID(appointment_ID)].patient_id = patient_ID;
 
+                if (UpdateData(APPOINTMENT) == FAILURE) {
+                    cout << "Failed to update appointment data file." << endl;
+                }
+
                 cout << "Appointment updated successfully." << endl;
                 break;
             }
@@ -862,6 +1211,11 @@ void modifyAppointment() {
                 }
 
                 appointment_record[searchAppointmentByID(appointment_ID)].doctor_id = doctor_ID;
+
+                if (UpdateData(APPOINTMENT) == FAILURE) {
+                    cout << "Failed to update appointment data file." << endl;
+                }
+
                 cout << "Appointment updated successfully." << endl;
                 break;
             }
@@ -878,6 +1232,10 @@ void modifyAppointment() {
 
                 appointment_record[searchAppointmentByID(appointment_ID)].date = date;
 
+                if (UpdateData(APPOINTMENT) == FAILURE) {
+                    cout << "Failed to update appointment data file." << endl;
+                }
+
                 cout << "Appointment updated successfully." << endl;
                 break;
             }
@@ -892,6 +1250,10 @@ void modifyAppointment() {
                     getline(cin, time);
                 }
                 appointment_record[searchAppointmentByID(appointment_ID)].time = time;
+
+                if (UpdateData(APPOINTMENT) == FAILURE) {
+                    cout << "Failed to update appointment data file." << endl;
+                }
 
                 cout << "Appointment updated successfully." << endl;
                 break;
@@ -939,3 +1301,4 @@ string generateAppointmentID() {
     }
     return "A" + num;
 } 
+
