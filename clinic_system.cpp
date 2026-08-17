@@ -1,38 +1,65 @@
+#include <fstream>
 # include <iostream>
 # include <string>
 # include <iomanip>
 # include <limits>
 # include <vector>
 # include <sstream>
+
 using namespace std;
 
+enum Gender { MALE, FEMALE };
+enum Status { ASSIGNED, CANCELLED };
+enum File_Type { PATIENT, DOCTOR, MEDICINE, APPOINTMENT};
+enum File_Status { SUCCESS, FAILURE };
+
+struct PatientRecord
+{
+    string id;
+    string name;
+    int age;
+    Gender gender;
+    string phone;
+};
+
+struct DoctorRecord
+{
+    string id;
+    string name;
+    string specialty;
+    double fee;
+};
+
+struct MedicineRecord
+{
+    string id;
+    string name;
+    string description;
+    double price;
+};
+
+struct AppointmentRecord
+{
+    string id;
+    string patient_id;
+    string doctor_id;
+    string date;
+    string time;
+    Status status;
+};
 
 // GLOBAL CONSTANTS
 const int MAX_RECORDS = 100;    // capacity per module (assignment requires at least 50)
-const int APPT_FIELDS  = 6;     // number of columns in the appointment 2D array
-const int COL_ID      = 0;
-const int COL_PATIENT = 1;
-const int COL_DOCTOR  = 2;
-const int COL_DATE    = 3;
-const int COL_TIME    = 4;
-const int COL_STATUS  = 5;
+const string Patient_file_path = "patient.csv";
+const string Doctor_file_path = "doctor.csv";
+const string Medicine_file_path = "medicine.csv";
+const string Appointment_file_path = "appointment.csv";
 
 // GLOBAL DATA STORE
-string patientID[MAX_RECORDS];
-string patientName[MAX_RECORDS];
-int patientAge[MAX_RECORDS];
-char patientGender[MAX_RECORDS];
-string patientPhone[MAX_RECORDS];
-int patientCount = 0;
-
-string doctorID[MAX_RECORDS];
-string doctorName[MAX_RECORDS];
-string doctorSpecialty[MAX_RECORDS];
-double doctorFee[MAX_RECORDS];
-int doctorCount = 0;
-
-string appointment[MAX_RECORDS][APPT_FIELDS];
-int appointmentCount = 0;
+vector<PatientRecord> patient_record;
+vector<DoctorRecord> doctor_record;
+vector<MedicineRecord> medicine_record;
+vector<AppointmentRecord> appointment_record;
 
 // FUNCTIONS
 // ---- Module 1: Patient & Doctor Management ----
@@ -41,17 +68,25 @@ void patientMenu();
 void addPatient();
 void updatePatient();
 void deletePatient();
-int searchPatientByID(string id);
+int searchPatientByID(string& id);
 void displayAllPatients();
 
 void doctorMenu();
 void addDoctor();
 void updateDoctor();
 void deleteDoctor();
-int  searchDoctorByID(string id);  
+int  searchDoctorByID(string& id);
 void displayAllDoctors();
 
 // ---- Module 2: Medicine Management ----
+
+void medicineMenu();
+void addMedicine();
+void updateMedicine();
+void deleteMedicine();
+int  searchMedicineByID(string& id);
+int  searchMedicineByName(const string& name);
+void displayAllMedicines();
 
 // ---- Module 3: Appointment Booking ----
 
@@ -59,7 +94,7 @@ void appointmentMenu();
 void createAppointment();
 void cancelAppointment();
 void modifyAppointment();
-int  searchAppointmentByID(string id);   // Linear Search
+int  searchAppointmentByID(string& id);   // Linear Search
 void displayAllAppointments();
 string generateAppointmentID();
 
@@ -75,14 +110,22 @@ double calculateTotalRevenue();
 void displayMainMenu();
 
 //Utilities tool
+vector<string> SimpleCsvParser(string& line, File_Type file_type);
 void displayHeader(string title);
 bool dateValidation(string date);
 bool timeValidation(string time);
+
+// BONUS
+File_Status SaveData();
+File_Status LoadData();
+File_Status UpdateData(File_Type file_type);
 
 // MAIN PROGRAM
 
 int main() {
     int choice;
+
+    LoadData();
 
     do {
         cin.clear();
@@ -96,11 +139,17 @@ int main() {
             case 2: doctorMenu(); break;
             case 3: appointmentMenu(); break;
             case 4: reportMenu(); break;
-            case 5: break;
+            case 5:
+                if (SaveData() == FAILURE) {
+                    cout << "Failed to update data files." << endl;
+                }
+                cout << "Thank you for using the Clinic Management System.";
+                return 0;
             default: cout << "Invalid choice. Please try again." << endl;
         }
 
     } while (choice != 5);
+    return 0;
 }
 
 void displayMainMenu() {
@@ -115,7 +164,88 @@ void displayMainMenu() {
 
 }
 
-void displayHeader(string title) {
+// Utilities tool
+vector<string> SimpleCsvParser(string& line, File_Type file_type) {
+    vector<string> result;
+    stringstream ss(line);
+    switch (file_type){
+        case PATIENT:{
+            // gender need to parse to Gender type after parse
+            string id, name, phone, gender, age;
+
+            getline(ss, id, ',');
+            getline(ss, name, ',');
+            getline(ss, age, ',');
+            getline(ss, gender, ',');
+            getline(ss, phone, ',');
+    
+            result.push_back(id);
+            result.push_back(name);
+            result.push_back(age);
+            result.push_back(gender);
+            result.push_back(phone);
+                
+            break;
+            }
+
+        case DOCTOR: {
+            string id, name, speciality, fee;
+            
+            getline(ss, id, ',');
+            getline(ss, name, ',');
+            getline(ss, speciality, ',');
+            getline(ss, fee, ',');
+
+            result.push_back(id);
+            result.push_back(name);
+            result.push_back(speciality);
+            result.push_back(fee);
+
+            break;
+        }
+
+        case MEDICINE: {
+            string id, name, description, price;
+
+            getline(ss, id, ',');
+            getline(ss, name, ',');
+            getline(ss, description, ',');
+            getline(ss, price, ',');
+
+            result.push_back(id);
+            result.push_back(name);
+            result.push_back(description);
+            result.push_back(price);
+
+            break;
+        }
+        case APPOINTMENT: {
+            string id, patient_id, doctor_id, date, time, status;
+
+            getline(ss, id, ',');
+            getline(ss, patient_id, ',');
+            getline(ss, doctor_id, ',');
+            getline(ss, date, ',');
+            getline(ss, time, ',');
+            getline(ss, status, ',');
+
+            result.push_back(id);
+            result.push_back(patient_id);
+            result.push_back(doctor_id);
+            result.push_back(date);
+            result.push_back(time);
+            result.push_back(status);
+
+            break;
+        }
+        default: return result;
+            break;
+    }
+
+    return result;
+}
+
+void displayHeader(string& title) {
     cout << "======================================" << endl;
     cout << setw(19 + title.length()/2) << title << endl;
     cout << "======================================" << endl << endl;
@@ -187,6 +317,198 @@ bool timeValidation(string time) {
     return true;
 }
 
+// BONUS
+File_Status SaveData() {
+    File_Status status = SUCCESS;
+    if (UpdateData(PATIENT) == FAILURE) status = FAILURE;
+    if (UpdateData(DOCTOR) == FAILURE) status = FAILURE;
+    if (UpdateData(MEDICINE) == FAILURE) status = FAILURE;
+    if (UpdateData(APPOINTMENT) == FAILURE) status = FAILURE;
+    return status;
+}
+
+File_Status LoadData() {
+    ifstream patient_file(Patient_file_path);
+    ifstream doctor_file(Doctor_file_path);
+    ifstream medicine_file(Medicine_file_path);
+    ifstream appointment_file(Appointment_file_path);
+
+    if (!patient_file || !doctor_file || !medicine_file || !appointment_file) {
+        return FAILURE;
+    }
+
+    vector<PatientRecord> loaded_patients;
+    vector<DoctorRecord> loaded_doctors;
+    vector<MedicineRecord> loaded_medicines;
+    vector<AppointmentRecord> loaded_appointments;
+
+    auto parse_int = [](const string& value, int& result) {
+        try {
+            size_t position = 0;
+            result = stoi(value, &position);
+            return position == value.length();
+        } catch (...) {
+            return false;
+        }
+    };
+
+    auto parse_double = [](const string& value, double& result) {
+        try {
+            size_t position = 0;
+            result = stod(value, &position);
+            return position == value.length();
+        } catch (...) {
+            return false;
+        }
+    };
+
+    string line;
+    while (getline(patient_file, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
+        vector<string> fields = SimpleCsvParser(line, PATIENT);
+        int age;
+        Gender gender;
+        if (fields.size() != 5 || fields[0].empty() || fields[1].empty() || fields[4].empty()
+            || !parse_int(fields[2], age) || age < 0) {
+            return FAILURE;
+        }
+
+        if (fields[3] == "Male") {
+            gender = MALE;
+        } else if (fields[3] == "Female") {
+            gender = FEMALE;
+        } else {
+            return FAILURE;
+        }
+
+        loaded_patients.push_back({fields[0], fields[1], age, gender, fields[4]});
+        if (loaded_patients.size() > MAX_RECORDS) {
+            return FAILURE;
+        }
+    }
+
+    while (getline(doctor_file, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
+        vector<string> fields = SimpleCsvParser(line, DOCTOR);
+        double fee;
+        if (fields.size() != 4 || fields[0].empty() || fields[1].empty() || fields[2].empty()
+            || !parse_double(fields[3], fee) || fee < 0) {
+            return FAILURE;
+        }
+
+        loaded_doctors.push_back({fields[0], fields[1], fields[2], fee});
+        if (loaded_doctors.size() > MAX_RECORDS) {
+            return FAILURE;
+        }
+    }
+
+    while (getline(medicine_file, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
+        vector<string> fields = SimpleCsvParser(line, MEDICINE);
+        double price;
+        if (fields.size() != 4 || fields[0].empty() || fields[1].empty() || fields[2].empty()
+            || !parse_double(fields[3], price) || price < 0) {
+            return FAILURE;
+        }
+
+        loaded_medicines.push_back({fields[0], fields[1], fields[2], price});
+        if (loaded_medicines.size() > MAX_RECORDS) {
+            return FAILURE;
+        }
+    }
+
+    while (getline(appointment_file, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
+        vector<string> fields = SimpleCsvParser(line, APPOINTMENT);
+        Status status;
+        if (fields.size() != 6 || fields[0].empty() || fields[1].empty() || fields[2].empty()
+            || fields[3].empty() || fields[4].empty()) {
+            return FAILURE;
+        }
+
+        if (fields[5] == "Assigned") {
+            status = ASSIGNED;
+        } else if (fields[5] == "Cancelled") {
+            status = CANCELLED;
+        } else {
+            return FAILURE;
+        }
+
+        loaded_appointments.push_back({fields[0], fields[1], fields[2], fields[3], fields[4], status});
+        if (loaded_appointments.size() > MAX_RECORDS) {
+            return FAILURE;
+        }
+    }
+
+    patient_record.swap(loaded_patients);
+    doctor_record.swap(loaded_doctors);
+    medicine_record.swap(loaded_medicines);
+    appointment_record.swap(loaded_appointments);
+
+    return SUCCESS;
+}
+
+File_Status UpdateData(File_Type file_type) {
+    switch (file_type) {
+        case PATIENT: {
+            ofstream file(Patient_file_path);
+            if (!file) return FAILURE;
+
+            for (const PatientRecord& record : patient_record) {
+                string gender = record.gender == MALE ? "Male" : "Female";
+                file << record.id << "," << record.name << "," << record.age << ","
+                     << gender << "," << record.phone << endl;
+            }
+            return file ? SUCCESS : FAILURE;
+        }
+        case DOCTOR: {
+            ofstream file(Doctor_file_path);
+            if (!file) return FAILURE;
+
+            for (const DoctorRecord& record : doctor_record) {
+                file << record.id << "," << record.name << "," << record.specialty << ","
+                     << record.fee << endl;
+            }
+            return file ? SUCCESS : FAILURE;
+        }
+        case MEDICINE: {
+            ofstream file(Medicine_file_path);
+            if (!file) return FAILURE;
+
+            for (const MedicineRecord& record : medicine_record) {
+                file << record.id << "," << record.name << "," << record.description << ","
+                     << record.price << endl;
+            }
+            return file ? SUCCESS : FAILURE;
+        }
+        case APPOINTMENT: {
+            ofstream file(Appointment_file_path);
+            if (!file) return FAILURE;
+
+            for (const AppointmentRecord& record : appointment_record) {
+                string status = record.status == ASSIGNED ? "Assigned" : "Cancelled";
+                file << record.id << "," << record.patient_id << "," << record.doctor_id << ","
+                     << record.date << "," << record.time << "," << status << endl;
+            }
+            return file ? SUCCESS : FAILURE;
+        }
+        default:
+            return FAILURE;
+    }
+}
+
 // Module 1:User/Record Management Module
 
 //Patient Management Menu
@@ -231,10 +553,10 @@ void patientMenu() {
 
                 int id = searchPatientByID(idx);
                 if (id != -1){
-                    cout << "Found -> " << patientName[id] << endl;
-                    cout << "Age: " << patientAge[id] << endl;
-                    cout << "Gender: " << patientGender[id] << endl;
-                    cout << "Phone: " << patientPhone[id] << "\n";
+                    cout << "Found -> " << patient_record[id].name << endl;
+                    cout << "Age: " << patient_record[id].age << endl;
+                    cout << "Gender: " << patient_record[id].gender << endl;
+                    cout << "Phone: " << patient_record[id].phone << "\n";
                 }
                 else{
                     cout << "Patient not found.\n";
@@ -259,8 +581,9 @@ void addPatient() {
     string id, name, phone;
     int age;
     char gender;
+    Gender gender_type;
 
-    if (patientCount >= MAX_RECORDS){
+    if (patient_record.size() >= MAX_RECORDS){
         cout << "Patient list is full" << endl;
         return;
     }
@@ -296,33 +619,44 @@ void addPatient() {
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cin >> phone;
     }
+    
+    id = "P" + to_string(patient_record.size() + 1);
+    if (toupper(gender) == 'M') {
+        gender_type = MALE;
+    } else {
+        gender_type = FEMALE;
+    }
 
-    patientID[patientCount]   = "P" + to_string(patientCount + 1);
-    patientName[patientCount] = name;
-    patientAge[patientCount]  = age;   
-    patientGender[patientCount] = toupper(gender);
-    patientPhone[patientCount] = phone;
+    patient_record.push_back(PatientRecord{id, name, age, gender_type, phone});
 
-    cout << "Patient added successfully. Patient ID: " << patientID[patientCount] << endl;
-    patientCount++;
+    if (UpdateData(PATIENT) == FAILURE) {
+        cout << "Failed to update patient data file." << endl;
+    }
+
+    cout << "Patient added successfully. Patient ID: " << id << endl;
 }
 
 void updatePatient(){
     string id, name, phone;
-    int choice, age;
+    int choice, age, index;
     char gender;
+    Gender gender_type;
 
     cout << "Enter Patient ID to update: ";
     getline(cin, id);
-    while (id.empty()){
-        cout << "ID cannot be empty. Please enter again: ";
-        getline(cin, id);
+    while (searchPatientByID(id) == -1){
+        if (id.empty()){
+            cout << "ID cannot be empty. Please enter again: ";
+            getline(cin, id);
+        }
+        else{
+            cout << "Patient not found. Please enter again: ";
+            getline(cin, id);
+        }
     }
 
-    while (searchPatientByID(id) == -1){
-        cout << "Patient not found. Please enter again: ";
-        getline(cin, id);
-    }
+    index = searchPatientByID(id);
+
 
     do {
         cout << "What do you want to update?" << endl;
@@ -335,94 +669,103 @@ void updatePatient(){
         cin >> choice;
        
         switch (choice) {
-        case 1:{
-            cout << "Enter new Name: ";
-            getline(cin, name);
-            while (name.empty()){
-                cout << "Name cannot be empty. Please enter again: ";
+            case 1:{
+                cout << "Enter new Name: ";
+                getline(cin, name);
+                while (name.empty()){
+                    cout << "Name cannot be empty. Please enter again: ";
+                }
             }
-        }
-        case 2:{
-            cout << "Enter new Age: ";
-            cin >> age;
-            while (age <0){
-                cout << "Invalid Age. Please enter a postive answer.";
-                cin.clear();
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            case 2:{
+                cout << "Enter new Age: ";
+                cin >> age;
+                while (age < 0){
+                    cout << "Invalid Age. Please enter a positive answer.";
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                }
             }
-        }
-        case 3:{
-            cout << "Enter new Gender (M/F): ";
-            cin >> gender;
-            while (toupper(gender) != 'M' && toupper(gender) != 'F'){
-                cout << "Invalid Gender. Please enter M or F: ";
+            case 3:{
+                cout << "Enter new Gender (M/F): ";
                 cin >> gender;
+                while (toupper(gender) != 'M' && toupper(gender) != 'F'){
+                    cout << "Invalid Gender. Please enter M or F: ";
+                    cin >> gender;
+                }
+                if (toupper(gender) == 'M'){
+                    gender_type = MALE;
+                }
+                else{
+                    gender_type = FEMALE;
+                }
             }
-        }
-        case 4: {
-            cout << "Enter new Phone Number: ";
-            cin >> phone;
-            while (phone.empty()){
-                 cout << "Phone number cannot be empty. Please enter again: ";
-                cin.clear();
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                getline(cin, phone);
+            case 4: {
+                cout << "Enter new Phone Number: ";
+                cin >> phone;
+                while (phone.empty()){
+                    cout << "Phone number cannot be empty. Please enter again: ";
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    getline(cin, phone);
+                }
             }
-        }
 
-        case 5: {
-            cout << "Returning to patient menu ... "<< endl;
-            break;
-        }
-        default:{
-            cout << "Invalid choice. Please try again." << endl;
-        }
-
+            case 5: {
+                cout << "Returning to patient menu ... "<< endl;
+                break;
+            }
+            default: cout << "Invalid choice. Please try again." << endl;
         }
 
 
-    }while (choice !=5);
- 
-    patientID[patientCount]   = "P" + to_string(patientCount + 1);
-    patientName[patientCount] = name;
-    patientAge[patientCount]  = age;   
-    patientGender[patientCount] = toupper(gender);
-    patientPhone[patientCount] = phone;
+    } while (choice !=5);
 
-    cout << "Patient updated successfully. Patient ID: " << patientID[patientCount] << endl;
+    patient_record[index].name = name;
+    patient_record[index].age = age;
+    patient_record[index].gender = gender_type;
+    patient_record[index].phone = phone;
+
+    if (UpdateData(PATIENT) == FAILURE) {
+        cout << "Failed to update patient data file." << endl;
+    }
+
+    cout << "Patient updated successfully. Patient ID: " << patient_record[index].id << endl;
 }
 
 void deletePatient(){
 
     string id;
+    int index;
 
     cout << "Enter Patient ID to delete: ";
     getline(cin, id);
-    while (id.empty()){
-        cout << "ID cannot be empty. Please enter again: ";
-        getline(cin, id);
+    while (searchPatientByID(id) == -1){
+        if (id.empty()){
+            cout << "ID cannot be empty. Please enter again: ";
+            getline(cin, id);
+        }
+        else{
+            cout << "Patient not found. Please enter again: ";
+            getline(cin, id);
+        }
+    }
+    index = searchPatientByID(id);
+
+    for (int i = searchPatientByID(id); i < patient_record.size(); i++){
+        patient_record[i] = patient_record[i + 1];
+    }
+    patient_record.erase(patient_record.begin() + index);
+
+    if (UpdateData(PATIENT) == FAILURE) {
+        cout << "Failed to update patient data file." << endl;
     }
 
-    if (searchPatientByID(id) == -1){
-        cout << "Patient not found. Please enter again: ";
-        getline(cin, id);
-    }
-
-    for (int i = searchPatientByID(id); i < patientCount - 1; i++){
-        patientID[i] = patientID[i + 1];
-        patientName[i] = patientName[i + 1];
-        patientAge[i] = patientAge[i + 1];
-        patientGender[i] = patientGender[i + 1];
-        patientPhone[i] = patientPhone[i + 1];
-    }
-    patientCount--;
     cout << "patient deleted successfully. Patient ID: " << id << endl;
 }
 
-int  searchPatientByID(string id){
-    
-    for (int i = 0; i < patientCount; i++){
-        if (patientID[i] == id){
+int  searchPatientByID(string& id){
+    for (int i = 0; i < patient_record.size(); i++){
+        if (patient_record[i].id == id){
             return i;
         }
     }
@@ -431,18 +774,18 @@ int  searchPatientByID(string id){
 
 void displayAllPatients(){
 
-    if (patientCount == 0){
+    if (patient_record.empty()){
         cout << "No patient records found. " << endl;
         return;
     }
 
-    displayHeader("All Patients (" + to_string(patientCount) + ")");
-    for (int i = 0; i < patientCount; i++){
-        cout << "Patient ID: " << patientID[i] << endl;
-        cout << "Name: " << patientName[i] << endl;
-        cout << "Age: " << patientAge[i] << endl;
-        cout << "Gender: " << patientGender[i] << endl;
-        cout << "Phone: " << patientPhone[i] << endl;
+    displayHeader("All Patients (" + to_string(patient_record.size()) + ")");
+    for (int i = 0; i < patient_record.size(); i++){
+        cout << "Patient ID: " << patient_record[i].id << endl;
+        cout << "Name: " << patient_record[i].name << endl;
+        cout << "Age: " << patient_record[i].age << endl;
+        cout << "Gender: " << patient_record[i].gender << endl;
+        cout << "Phone: " << patient_record[i].phone << endl;
         cout << endl;
     }
 }
@@ -490,8 +833,8 @@ void doctorMenu() {
                 getline(cin, idx);
                 int id = searchDoctorByID(idx);
                 if (id != -1)
-                    cout << "Found -> " << doctorName[id] << ", Specialty: " << doctorSpecialty[id]
-                         << ", Fee: " << doctorFee[id] << "\n";
+                    cout << "Found -> " << doctor_record[id].name << ", Specialty: " << doctor_record[id].specialty
+                         << ", Fee: " << doctor_record[id].fee << "\n";
                 else
                     cout << "Doctor not found.\n";
                 break;
@@ -515,7 +858,7 @@ void addDoctor(){
     string id, name, specialty;
     double fee;
 
-    if (doctorCount >= MAX_RECORDS){
+    if (doctor_record.size() >= MAX_RECORDS){
         cout << "Doctor list is full" << endl;
         return;
     }
@@ -542,34 +885,35 @@ void addDoctor(){
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 
+    id = "D" + to_string(doctor_record.size() + 1);
 
-    doctorID[doctorCount]   = "D" + to_string(doctorCount + 1);
-    doctorName[doctorCount] = name;
-    doctorSpecialty[doctorCount]  = specialty;   
-    doctorFee[doctorCount] = fee;
+    doctor_record.push_back({id, name, specialty, fee});
 
+    if (UpdateData(DOCTOR) == FAILURE) {
+        cout << "Failed to update doctor data file." << endl;
+    }
 
-    cout << "Doctor added successfully. Doctor ID: " << doctorID[doctorCount] << endl;
-    doctorCount++;
+    cout << "Doctor added successfully. Doctor ID: " << id << endl;
 }
 
 void updateDoctor(){
 
     string id, name, specialty;
-    int choice;
+    int choice, index;
     double fee;
- 
+
 
     cout << "Enter Doctor ID to update: ";
     getline(cin, id);
-    while (id.empty()){
-        cout << "ID cannot be empty. Please enter again: ";
-        getline(cin, id);
-    }
-
     while (searchDoctorByID(id) == -1){
-        cout << "Doctor not found. Please enter again: ";
-        getline(cin, id);
+        if (id.empty()){
+            cout << "ID cannot be empty. Please enter again: ";
+            getline(cin, id);
+        }
+        else{
+            cout << "Doctor not found. Please enter again: ";
+            getline(cin, id);
+        }
     }
 
     do {
@@ -617,46 +961,57 @@ void updateDoctor(){
         }
 
 
-    }while (choice !=5);
- 
-    doctorID[doctorCount]   = "D" + to_string(doctorCount + 1);
-    doctorName[doctorCount] = name;
-    doctorSpecialty[doctorCount]  = specialty;
-    doctorFee[doctorCount] = fee;
+    } while (choice !=5);
 
-    cout << "Doctor updated successfully. Doctor ID: " << doctorID[doctorCount] << endl;
+    index = searchDoctorByID(id);
+
+    doctor_record[index].name = name;
+    doctor_record[index].specialty = specialty;
+    doctor_record[index].fee = fee;
+
+    if (UpdateData(DOCTOR) == FAILURE) {
+        cout << "Failed to update doctor data file." << endl;
+    }
+
+    cout << "Doctor updated successfully. Doctor ID: " << doctor_record[index].id << endl;
 }
 
 void deleteDoctor(){
 
     string id;
+    int index;
 
     cout << "Enter Doctor ID to delete: ";
     getline(cin, id);
     while (id.empty()){
-        cout << "ID cannot be empty. Please enter again: ";
-        getline(cin, id);
+        if (searchDoctorByID(id) == -1){
+            cout << "Doctor not found. Please enter again: ";
+            getline(cin, id);
+        } else {
+            cout << "ID cannot be empty. Please enter again: ";
+            getline(cin, id);
+        }
+    }
+    index = searchDoctorByID(id);
+
+
+
+    for (int i = index; i < doctor_record.size(); i++){
+        doctor_record[i] = doctor_record[i + 1];
+    }
+    doctor_record.erase(doctor_record.begin() + index);
+
+    if (UpdateData(DOCTOR) == FAILURE) {
+        cout << "Failed to update doctor data file." << endl;
     }
 
-    if (searchDoctorByID(id) == -1){
-        cout << "Doctor not found. Please enter again: ";
-        getline(cin, id);
-    }
-
-    for (int i = searchDoctorByID(id); i < doctorCount - 1; i++){
-        doctorID[i] = doctorID[i + 1];
-        doctorName[i] = doctorName[i + 1];
-        doctorSpecialty[i] = doctorSpecialty[i + 1];
-        doctorFee[i] = doctorFee[i + 1];
-    }
-    doctorCount--;
     cout << "Doctor deleted successfully. Doctor ID: " << id << endl;
 }
 
-int  searchDoctorByID(string id){
+int  searchDoctorByID(string& id){
 
     for (int i = 0; i < MAX_RECORDS; i++) {
-        if (doctorID[i] == id) {
+        if (doctor_record[i].id == id) {
             return i;
         }
     }
@@ -665,22 +1020,22 @@ int  searchDoctorByID(string id){
 
 void displayAllDoctors(){
 
-    if (doctorCount == 0){
+    if (doctor_record.empty()){
     cout << "No doctor records found. " << endl;
     return;
     }
 
-    displayHeader("All Doctors (" + to_string(doctorCount) + ")");
-    for (int i = 0; i < doctorCount; i++){
-        cout << "Doctor ID: " << doctorID[i] << endl;
-        cout << "Name: " << doctorName[i] << endl;
-        cout << "Specialty: " << doctorSpecialty[i] << endl;
-        cout << "Consultation Fee: " << doctorFee[i] << endl;
+    displayHeader("All Doctors (" + to_string(doctor_record.size()) + ")");
+    for (auto & i : doctor_record){
+        cout << "Doctor ID: " << i.id << endl;
+        cout << "Name: " << i.name << endl;
+        cout << "Specialty: " << i.specialty << endl;
+        cout << "Consultation Fee: " << i.fee << endl;
         cout << endl;
     }
 }
 
-// ---- Module 3: Appointment Booking (Student C) ----
+// Module 3: Appointment Booking
 
 void appointmentMenu() {
     displayHeader("Appointment Management");
@@ -712,6 +1067,11 @@ void appointmentMenu() {
 }
 
 void createAppointment() {
+    if (appointment_record.size() == MAX_RECORDS) {
+        cout << "Maximum number of appointments reached." << endl;
+        return;
+    }
+
     string patient_ID, doctor_ID, date, time;
 
     cin.clear();
@@ -749,21 +1109,19 @@ void createAppointment() {
         getline(cin, time);
     }
 
-    appointment[appointmentCount][COL_ID] = generateAppointmentID();
-    appointment[appointmentCount][COL_PATIENT] = patient_ID;
-    appointment[appointmentCount][COL_DOCTOR] = doctor_ID;
-    appointment[appointmentCount][COL_DATE] = date;
-    appointment[appointmentCount][COL_TIME] = time;
-    appointment[appointmentCount][COL_STATUS] = "Scheduled";
+    appointment_record.push_back(AppointmentRecord{generateAppointmentID(), patient_ID, doctor_ID, date, time, ASSIGNED});
+
+    if (UpdateData(APPOINTMENT) == FAILURE) {
+        cout << "Failed to update appointment data file." << endl;
+    }
 
     cout << endl;
-    cout << "Your appointment ID is: " << appointment[appointmentCount][COL_ID] << endl;
-    cout << "Patient ID and name: " << patient_ID << " " << patientName[searchPatientByID(patient_ID)] << endl;
-    cout << "Doctor ID and name: " << doctor_ID << " " << doctorName[searchDoctorByID(doctor_ID)] << endl;
+    cout << "Your appointment ID is: " << appointment_record.back().id << endl;
+    cout << "Patient ID and name: " << patient_ID << " " << patient_record[searchPatientByID(patient_ID)].name << endl;
+    cout << "Doctor ID and name: " << doctor_ID << " " << doctor_record[searchDoctorByID(doctor_ID)].name << endl;
     cout << "Date and time: " << date << " " << time << endl;
 
     cout << "Appointment created successfully." << endl;
-    appointmentCount++;
 }
 
 void cancelAppointment() {
@@ -780,12 +1138,17 @@ void cancelAppointment() {
         getline(cin, appointment_ID);
     }
 
-    if (appointment[searchAppointmentByID(appointment_ID)][COL_STATUS] == "Canceled") {
+    if (appointment_record[searchAppointmentByID(appointment_ID)].status == CANCELLED) {
         cout << "Appointment already canceled." << endl;
         return;
     }
 
-    appointment[searchAppointmentByID(appointment_ID)][COL_STATUS] = "Canceled";
+    appointment_record[searchAppointmentByID(appointment_ID)].status = CANCELLED;
+
+    if (UpdateData(APPOINTMENT) == FAILURE) {
+        cout << "Failed to update appointment data file." << endl;
+    }
+
     cout << "Appointment canceled successfully." << endl;
 }
 
@@ -828,7 +1191,11 @@ void modifyAppointment() {
                     getline(cin, patient_ID);
                 }
 
-                appointment[searchAppointmentByID(appointment_ID)][COL_PATIENT] = patient_ID;
+                appointment_record[searchAppointmentByID(appointment_ID)].patient_id = patient_ID;
+
+                if (UpdateData(APPOINTMENT) == FAILURE) {
+                    cout << "Failed to update appointment data file." << endl;
+                }
 
                 cout << "Appointment updated successfully." << endl;
                 break;
@@ -843,7 +1210,12 @@ void modifyAppointment() {
                     getline(cin, doctor_ID);
                 }
 
-                appointment[searchAppointmentByID(appointment_ID)][COL_DOCTOR] = doctor_ID;
+                appointment_record[searchAppointmentByID(appointment_ID)].doctor_id = doctor_ID;
+
+                if (UpdateData(APPOINTMENT) == FAILURE) {
+                    cout << "Failed to update appointment data file." << endl;
+                }
+
                 cout << "Appointment updated successfully." << endl;
                 break;
             }
@@ -858,7 +1230,11 @@ void modifyAppointment() {
                     getline(cin, date);
                 }
 
-                appointment[searchAppointmentByID(appointment_ID)][COL_DATE] = date;
+                appointment_record[searchAppointmentByID(appointment_ID)].date = date;
+
+                if (UpdateData(APPOINTMENT) == FAILURE) {
+                    cout << "Failed to update appointment data file." << endl;
+                }
 
                 cout << "Appointment updated successfully." << endl;
                 break;
@@ -873,7 +1249,11 @@ void modifyAppointment() {
                     cout << "Enter time (HH:MM): ";
                     getline(cin, time);
                 }
-                appointment[searchAppointmentByID(appointment_ID)][COL_TIME] = time;
+                appointment_record[searchAppointmentByID(appointment_ID)].time = time;
+
+                if (UpdateData(APPOINTMENT) == FAILURE) {
+                    cout << "Failed to update appointment data file." << endl;
+                }
 
                 cout << "Appointment updated successfully." << endl;
                 break;
@@ -890,10 +1270,10 @@ void modifyAppointment() {
     } while (choice != 5);
 }
 
-int searchAppointmentByID(string appointment_ID) {
+int searchAppointmentByID(string& appointment_ID) {
     // Linear search
-    for (int i = 0; i < MAX_RECORDS; i++) {
-        if (appointment[i][COL_ID] == appointment_ID) {
+    for (int i = 0; i < appointment_record.size(); i++) {
+        if (appointment_record[i].id == appointment_ID) {
             return i;
         }
     }
@@ -902,13 +1282,23 @@ int searchAppointmentByID(string appointment_ID) {
 
 void displayAllAppointments() {
     cout << endl;
-    for (int i = 0; i < appointmentCount; i++) {
-        cout << "Appointment ID: " << appointment[i][COL_ID] << endl;
-        cout << "Doctor ID: " << appointment[i][COL_DOCTOR] << endl;
-        cout << "Patient ID: " << appointment[i][COL_PATIENT] << endl;
-        cout << "Date: " << appointment[i][COL_DATE] << endl;
-        cout << "Time: " << appointment[i][COL_TIME] << endl;
-        cout << "Status: " << appointment[i][COL_STATUS] << endl;
+    for (int i = 0; i < appointment_record.size(); i++) {
+        cout << "Appointment ID: " << appointment_record[i].id << endl;
+        cout << "Doctor ID: " << appointment_record[i].doctor_id << endl;
+        cout << "Patient ID: " << appointment_record[i].patient_id << endl;
+        cout << "Date: " << appointment_record[i].date << endl;
+        cout << "Time: " << appointment_record[i].time << endl;
+        cout << "Status: " << appointment_record[i].status << endl;
         cout << endl;
     }
 }
+
+string generateAppointmentID() {
+    int n = appointment_record.size() + 1;
+    string num = to_string(n);
+    while (num.length() < 3) {
+        num = "0" + num;
+    }
+    return "A" + num;
+} 
+
