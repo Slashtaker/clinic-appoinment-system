@@ -1,10 +1,11 @@
 #include <fstream>
-# include <iostream>
-# include <string>
-# include <iomanip>
-# include <limits>
-# include <vector>
-# include <sstream>
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <limits>
+#include <vector>
+#include <sstream>
+#include <random>
 
 using namespace std;
 
@@ -94,7 +95,7 @@ void appointmentMenu();
 void createAppointment();
 void cancelAppointment();
 void modifyAppointment();
-int  searchAppointmentByID(string& id);   // Linear Search
+int  searchAppointmentByID(const string& id);   // Linear Search
 void displayAllAppointments();
 string generateAppointmentID();
 
@@ -111,9 +112,9 @@ void displayMainMenu();
 
 //Utilities tool
 vector<string> SimpleCsvParser(string& line, File_Type file_type);
-void displayHeader(string title);
-bool dateValidation(string date);
-bool timeValidation(string time);
+void displayHeader(const string& title);
+bool dateValidation(const string& date);
+bool timeValidation(const string& time);
 
 // BONUS
 File_Status SaveData();
@@ -137,9 +138,10 @@ int main() {
         switch (choice) {
             case 1: patientMenu(); break;
             case 2: doctorMenu(); break;
-            case 3: appointmentMenu(); break;
-            case 4: reportMenu(); break;
-            case 5:
+            case 3: medicineMenu(); break;
+            case 4: appointmentMenu(); break;
+            case 5: reportMenu(); break;
+            case 6:
                 if (SaveData() == FAILURE) {
                     cout << "Failed to update data files." << endl;
                 }
@@ -148,7 +150,7 @@ int main() {
             default: cout << "Invalid choice. Please try again." << endl;
         }
 
-    } while (choice != 5);
+    } while (choice != 6);
     return 0;
 }
 
@@ -157,9 +159,10 @@ void displayMainMenu() {
 
     cout << "1. Patient Management" << endl;
     cout << "2. Doctor Management" << endl;
-    cout << "3. Appointment Management" << endl;
-    cout << "4. Reporting" << endl;
-    cout << "5. Exit" << endl;
+    cout << "3. Medicine Management" << endl;
+    cout << "4. Appointment Management" << endl;
+    cout << "5. Reporting" << endl;
+    cout << "6. Exit" << endl;
     cout << "Enter your choice: ";
 
 }
@@ -245,13 +248,13 @@ vector<string> SimpleCsvParser(string& line, File_Type file_type) {
     return result;
 }
 
-void displayHeader(string& title) {
+void displayHeader(const string& title) {
     cout << "======================================" << endl;
-    cout << setw(19 + title.length()/2) << title << endl;
+    cout << setw(19 + static_cast<int>(title.length() / 2)) << title << endl;
     cout << "======================================" << endl << endl;
 }
 
-bool dateValidation(string date) {
+bool dateValidation(const string& date) {
     vector<int> date_parts;
     string temp;
     stringstream ss(date);
@@ -298,7 +301,7 @@ bool dateValidation(string date) {
     return true;
 }
 
-bool timeValidation(string time) {
+bool timeValidation(const string& time) {
     vector<int> time_parts;
     string temp;
     stringstream ss(time);
@@ -315,6 +318,26 @@ bool timeValidation(string time) {
         return false;
 
     return true;
+}
+
+string generateID(File_Type file_type) {
+    int biggest = 0;
+
+    for (auto& i : appointment_record) {
+        int id = stoi(i.id.substr(1));
+
+        if (id > biggest) {
+            biggest = id;
+        }
+    }
+
+    string num = to_string(biggest + 1);
+
+    while (num.length() < 3) {
+        num.insert(0, 1, '0');
+    }
+
+    return num;
 }
 
 // BONUS
@@ -563,7 +586,10 @@ void patientMenu() {
                 }
                 break;
             }
-            case 5:{
+            case 5: {
+                //
+            }
+            case 6:{
                 cout << "Returning to main menu ... " << endl;
                 break;
             }
@@ -573,7 +599,7 @@ void patientMenu() {
             }
         }
 
-    } while (choice != 5);
+    } while (choice != 6);
 }
 
 void addPatient() {
@@ -596,9 +622,8 @@ void addPatient() {
     }
 
     cout << "Enter age: ";
-    cin >> age;
     while (!(cin >> age) || age < 0) {
-        cout << "Invalid Age. Please enter a postive answer.";
+        cout << "Invalid Age. Please enter a positive answer.";
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
@@ -619,13 +644,27 @@ void addPatient() {
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cin >> phone;
     }
-    
-    id = "P" + to_string(patient_record.size() + 1);
+
     if (toupper(gender) == 'M') {
         gender_type = MALE;
     } else {
         gender_type = FEMALE;
     }
+
+    int biggest = 0;
+    for (auto& i : appointment_record) {
+        int idx = stoi(i.id.substr(1));
+
+        biggest = max(biggest, idx);
+    }
+
+    string num = to_string(biggest + 1);
+
+    while (num.length() < 3) {
+        num.insert(0, 1, '0');
+    }
+
+    id = "P" + num;
 
     patient_record.push_back(PatientRecord{id, name, age, gender_type, phone});
 
@@ -643,6 +682,8 @@ void updatePatient(){
     Gender gender_type;
 
     cout << "Enter Patient ID to update: ";
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     getline(cin, id);
     while (searchPatientByID(id) == -1){
         if (id.empty()){
@@ -675,6 +716,8 @@ void updatePatient(){
                 while (name.empty()){
                     cout << "Name cannot be empty. Please enter again: ";
                 }
+                patient_record[index].name = name;
+                break;
             }
             case 2:{
                 cout << "Enter new Age: ";
@@ -684,6 +727,8 @@ void updatePatient(){
                     cin.clear();
                     cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 }
+                patient_record[index].age = age;
+                break;
             }
             case 3:{
                 cout << "Enter new Gender (M/F): ";
@@ -698,6 +743,8 @@ void updatePatient(){
                 else{
                     gender_type = FEMALE;
                 }
+                patient_record[index].gender = gender_type;
+                break;
             }
             case 4: {
                 cout << "Enter new Phone Number: ";
@@ -708,6 +755,8 @@ void updatePatient(){
                     cin.ignore(numeric_limits<streamsize>::max(), '\n');
                     getline(cin, phone);
                 }
+                patient_record[index].phone = phone;
+                break;
             }
 
             case 5: {
@@ -717,13 +766,8 @@ void updatePatient(){
             default: cout << "Invalid choice. Please try again." << endl;
         }
 
-
     } while (choice !=5);
 
-    patient_record[index].name = name;
-    patient_record[index].age = age;
-    patient_record[index].gender = gender_type;
-    patient_record[index].phone = phone;
 
     if (UpdateData(PATIENT) == FAILURE) {
         cout << "Failed to update patient data file." << endl;
@@ -751,9 +795,6 @@ void deletePatient(){
     }
     index = searchPatientByID(id);
 
-    for (int i = searchPatientByID(id); i < patient_record.size(); i++){
-        patient_record[i] = patient_record[i + 1];
-    }
     patient_record.erase(patient_record.begin() + index);
 
     if (UpdateData(PATIENT) == FAILURE) {
@@ -780,12 +821,12 @@ void displayAllPatients(){
     }
 
     displayHeader("All Patients (" + to_string(patient_record.size()) + ")");
-    for (int i = 0; i < patient_record.size(); i++){
-        cout << "Patient ID: " << patient_record[i].id << endl;
-        cout << "Name: " << patient_record[i].name << endl;
-        cout << "Age: " << patient_record[i].age << endl;
-        cout << "Gender: " << patient_record[i].gender << endl;
-        cout << "Phone: " << patient_record[i].phone << endl;
+    for (auto & i : patient_record){
+        cout << "Patient ID: " << i.id << endl;
+        cout << "Name: " << i.name << endl;
+        cout << "Age: " << i.age << endl;
+        cout << "Gender: " << i.gender << endl;
+        cout << "Phone: " << i.phone << endl;
         cout << endl;
     }
 }
@@ -839,7 +880,10 @@ void doctorMenu() {
                     cout << "Doctor not found.\n";
                 break;
             }
-            case 5:{
+            case 5: {
+                //
+            }
+            case 6:{
                 cout << "Returning to main menu ... " << endl;
                 break;
             }
@@ -850,7 +894,7 @@ void doctorMenu() {
         
 
         } 
-    } while (choice != 5);
+    } while (choice != 6);
 }
 
 void addDoctor(){
@@ -878,14 +922,26 @@ void addDoctor(){
     }
 
     cout << "Enter consultation fee: ";
-    cin >> fee;
     while (!(cin >> fee) || fee < 0){
         cout << "Invalid fee. Please enter a positive number: ";
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 
-    id = "D" + to_string(doctor_record.size() + 1);
+    int biggest = 0;
+    for (auto& i : appointment_record) {
+        int idx = stoi(i.id.substr(1));
+
+        biggest = max(biggest, idx);
+    }
+
+    string num = to_string(biggest + 1);
+
+    while (num.length() < 3) {
+        num.insert(0, 1, '0');
+    }
+
+    id = "D" + num;
 
     doctor_record.push_back({id, name, specialty, fee});
 
@@ -902,8 +958,9 @@ void updateDoctor(){
     int choice, index;
     double fee;
 
-
     cout << "Enter Doctor ID to update: ";
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     getline(cin, id);
     while (searchDoctorByID(id) == -1){
         if (id.empty()){
@@ -916,13 +973,15 @@ void updateDoctor(){
         }
     }
 
+    index = searchDoctorByID(id);
+
     do {
         cout << "What do you want to update?" << endl;
         cout << "1. Name" << endl;
         cout << "2. Specialty" << endl;
         cout << "3. Consultation Fee" << endl;
         cout << "4. Back to Doctor Menu" << endl;
-        cout << "Enter your choice: (1-5)";
+        cout << "Enter your choice: (1-4)";
         cin >> choice;
        
         switch (choice) {
@@ -932,6 +991,8 @@ void updateDoctor(){
             while (name.empty()){
                 cout << "Name cannot be empty. Please enter again: ";
             }
+            doctor_record[index].name = name;
+            break;
         }
         case 2:{
             cout << "Enter new Specialty: ";
@@ -940,6 +1001,8 @@ void updateDoctor(){
                 cout << "Specialty cannot be empty. Please enter again: ";
                 getline(cin, specialty);
             }
+            doctor_record[index].specialty = specialty;
+            break;
         }
         case 3:{
             cout << "Enter new Consultation Fee: ";
@@ -949,6 +1012,8 @@ void updateDoctor(){
                 cin.clear();
                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
             }
+            doctor_record[index].fee = fee;
+            break;
         }
         case 4: {
             cout << "Returning to doctor menu ... "<< endl;
@@ -960,14 +1025,7 @@ void updateDoctor(){
 
         }
 
-
-    } while (choice !=5);
-
-    index = searchDoctorByID(id);
-
-    doctor_record[index].name = name;
-    doctor_record[index].specialty = specialty;
-    doctor_record[index].fee = fee;
+    } while (choice !=4);
 
     if (UpdateData(DOCTOR) == FAILURE) {
         cout << "Failed to update doctor data file." << endl;
@@ -983,22 +1041,17 @@ void deleteDoctor(){
 
     cout << "Enter Doctor ID to delete: ";
     getline(cin, id);
-    while (id.empty()){
-        if (searchDoctorByID(id) == -1){
-            cout << "Doctor not found. Please enter again: ";
+    while (searchDoctorByID(id) == -1){
+        if (id.empty()){
+            cout << "ID cannot be empty. Please enter again: ";
             getline(cin, id);
         } else {
-            cout << "ID cannot be empty. Please enter again: ";
+            cout << "Doctor not found. Please enter again: ";
             getline(cin, id);
         }
     }
     index = searchDoctorByID(id);
 
-
-
-    for (int i = index; i < doctor_record.size(); i++){
-        doctor_record[i] = doctor_record[i + 1];
-    }
     doctor_record.erase(doctor_record.begin() + index);
 
     if (UpdateData(DOCTOR) == FAILURE) {
@@ -1010,7 +1063,7 @@ void deleteDoctor(){
 
 int  searchDoctorByID(string& id){
 
-    for (int i = 0; i < MAX_RECORDS; i++) {
+    for (int i = 0; i < doctor_record.size(); i++) {
         if (doctor_record[i].id == id) {
             return i;
         }
@@ -1270,7 +1323,7 @@ void modifyAppointment() {
     } while (choice != 5);
 }
 
-int searchAppointmentByID(string& appointment_ID) {
+int searchAppointmentByID(const string& appointment_ID) {
     // Linear search
     for (int i = 0; i < appointment_record.size(); i++) {
         if (appointment_record[i].id == appointment_ID) {
@@ -1282,23 +1335,32 @@ int searchAppointmentByID(string& appointment_ID) {
 
 void displayAllAppointments() {
     cout << endl;
-    for (int i = 0; i < appointment_record.size(); i++) {
-        cout << "Appointment ID: " << appointment_record[i].id << endl;
-        cout << "Doctor ID: " << appointment_record[i].doctor_id << endl;
-        cout << "Patient ID: " << appointment_record[i].patient_id << endl;
-        cout << "Date: " << appointment_record[i].date << endl;
-        cout << "Time: " << appointment_record[i].time << endl;
-        cout << "Status: " << appointment_record[i].status << endl;
+    for (auto & i : appointment_record) {
+        cout << "Appointment ID: " << i.id << endl;
+        cout << "Doctor ID: " << i.doctor_id << endl;
+        cout << "Patient ID: " << i.patient_id << endl;
+        cout << "Date: " << i.date << endl;
+        cout << "Time: " << i.time << endl;
+        cout << "Status: " << i.status << endl;
         cout << endl;
     }
 }
 
 string generateAppointmentID() {
-    int n = appointment_record.size() + 1;
-    string num = to_string(n);
-    while (num.length() < 3) {
-        num = "0" + num;
+    int biggest = 0;
+
+    for (auto& i : appointment_record) {
+        int id = stoi(i.id.substr(1));
+
+        biggest = max(biggest, id);
     }
+
+    string num = to_string(biggest + 1);
+
+    while (num.length() < 3) {
+        num.insert(0, 1, '0');
+    }
+
     return "A" + num;
 } 
 
