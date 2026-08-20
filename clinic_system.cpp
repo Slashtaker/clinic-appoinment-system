@@ -1304,30 +1304,10 @@ string generateAppointmentID() {
 
 // Module 4: Reporting Module
 
-int searchPatientByID(string id) {
-    for (int i = 0; i < patient_record.size(); i++) {
-        if (patient_record[i].id == id) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-int  searchDoctorByID(string id) {
-    for (int i = 0; i < doctor_record.size(); i++) {
-        if (doctor_record[i].id == id) {
-            return i;
-        }
-    }
-    return -1;
-}
-
 void reportMenu() {
     int choice;
     do {
-        cout << "==============================================" << endl;
-        cout << "               REPORTING SYSTEM" << endl;
-        cout << "==============================================" << endl << endl;
+        displayHeader("REPORTING SYSTEM");
         cout << "1. Summary Report" << endl;
         cout << "2. Detailed Report" << endl;
         cout << "3. Statistics Report" << endl;
@@ -1390,10 +1370,7 @@ void generateSummaryReport() {
             canceled++;
         }
     }
-    cout << "============================================" << endl;
-    cout << "               SUMMARY REPORT" << endl;
-    cout << "============================================" << endl << endl;
-
+    displayHeader("SUMMARY REPORT");
     cout << "Total Patients          : " << patient_record.size() << endl
         << "Total Doctors           : " << doctor_record.size() << endl
         << "Total Appointments      : " << appointment_record.size() << endl
@@ -1405,10 +1382,7 @@ void generateSummaryReport() {
 void generateDetailedReport() {
 
 
-    cout << "=============================================" << endl;
-    cout << "               DETAILED REPORT" << endl;
-    cout << "=============================================" << endl << endl;
-
+    displayHeader("DETAILED REPORT");
     cout << left
         << setw(19) << "Appointment ID"
         << setw(13) << "Patient ID"
@@ -1482,9 +1456,7 @@ void calculateStatistics() {
         averageAppointmentsPerDoctor = (double)(cancelledAppointments + validAppointments) / doctor_record.size();
     }
 
-    cout << "==============================================" << endl;
-    cout << "                  STATISTICS" << endl;
-    cout << "==============================================" << endl << endl;
+    displayHeader("STATISTICS");
 
     cout << "Valid Appointment               : " << validAppointments << endl
         << "Canceled Appointment            : " << cancelledAppointments << endl
@@ -1516,9 +1488,7 @@ void sortPatientsByName() {
             }
         }
     }
-    cout << "===================================================" << endl;
-    cout << "               SORT PATIENTS BY NAME" << endl;
-    cout << "===================================================" << endl << endl;
+    displayHeader("SORT PATIENTS BY NAME");
     cout << left
         << setw(20) << "Name"
         << setw(13) << "ID"
@@ -1579,10 +1549,7 @@ void displayDoctorAppointment() {
         totalCanceled += canceledAppointments[i];
     }
 
-    cout << "===============================================" << endl;
-    cout << "          DOCTOR APPOINTMENT ANALYSIS" << endl;
-    cout << "===============================================" << endl << endl;
-
+    displayHeader("DOCTOR APPOINTMENT ANALYSIS");
     cout << left
         << setw(13) << "ID"
         << setw(20) << "Name"
