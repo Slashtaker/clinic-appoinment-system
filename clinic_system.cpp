@@ -564,6 +564,10 @@ void patientMenu() {
                 break;
             }
             case 5:{
+                displayAllPatients();
+                break;
+            }
+            case 6:{
                 cout << "Returning to main menu ... " << endl;
                 break;
             }
@@ -839,7 +843,11 @@ void doctorMenu() {
                     cout << "Doctor not found.\n";
                 break;
             }
-            case 5:{
+            case 5: {
+                displayAllDoctors();
+                break;
+            }
+            case 6:{
                 cout << "Returning to main menu ... " << endl;
                 break;
             }
