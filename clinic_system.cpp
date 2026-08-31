@@ -106,7 +106,7 @@ void generateSummaryReport();
 void generateDetailedReport();
 void calculateStatistics();
 void sortPatientsByName();      // Bubble Sort
-double calculateTotalRevenue();
+void displayDoctorAppointment();
 
 void displayMainMenu();
 
@@ -1364,3 +1364,278 @@ string generateAppointmentID() {
     return "A" + num;
 } 
 
+// Module 4: Reporting Module
+
+void reportMenu() {
+    int choice;
+    do {
+        displayHeader("REPORTING SYSTEM");
+        cout << "1. Summary Report" << endl;
+        cout << "2. Detailed Report" << endl;
+        cout << "3. Statistics Report" << endl;
+        cout << "4. Sort Patients By Name" << endl;
+        cout << "5. Display Doctor Appointment" << endl;
+        cout << "6. Back To Main Menu" << endl;
+        cout << "Enter your choice : ";
+        cin >> choice;
+        cout << endl;
+
+        switch (choice) {
+        case 1:
+            generateSummaryReport();
+            cout << "\nPress <ENTER> to back to the Report Menu.\n";
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cin.get();
+            break;
+        case 2:
+            generateDetailedReport();
+            cout << "\nPress <ENTER> to back to the Report Menu.\n";
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cin.get();
+            break;
+        case 3:
+            calculateStatistics();
+            cout << "\nPress <ENTER> to back to the Report Menu.\n";
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cin.get();
+            break;
+        case 4:
+            sortPatientsByName();
+            cout << "\nPress <ENTER> to back to the Report Menu.\n";
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cin.get();
+            break;
+        case 5:
+            displayDoctorAppointment();
+            cout << "\nPress <ENTER> to back to the Report Menu.\n";
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cin.get();
+            break;
+        case 6:
+            break;
+        default:
+            cout << "Invalid Input. Enter Again." << endl << endl;;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+    } while (choice != 6);
+    return;
+}
+
+void generateSummaryReport() {
+    int scheduled = 0, canceled = 0;
+    for (int i = 0;i < appointment_record.size();i++) {
+        if (appointment_record[i].status == ASSIGNED) {
+            scheduled++;
+        }
+        else if (appointment_record[i].status == CANCELLED) {
+            canceled++;
+        }
+    }
+    displayHeader("SUMMARY REPORT");
+    cout << "Total Patients          : " << patient_record.size() << endl
+        << "Total Doctors           : " << doctor_record.size() << endl
+        << "Total Appointments      : " << appointment_record.size() << endl
+        << "Scheduled Appointments  : " << scheduled << endl
+        << "Cancelled Appointments  : " << canceled << endl << endl;
+
+}
+
+void generateDetailedReport() {
+
+
+    displayHeader("DETAILED REPORT");
+    cout << left
+        << setw(19) << "Appointment ID"
+        << setw(13) << "Patient ID"
+        << setw(19) << "Patient Name"
+        << setw(18) << "Doctor Name"
+        << setw(11) << "Date"
+        << setw(9) << "Time"
+        << "Status" << endl;
+    cout << "-------------------------------------------------------------------------------------------------" << endl;
+
+    for (int i = 0;i < appointment_record.size();i++) {
+        int patientIndex = searchPatientByID(appointment_record[i].patient_id);
+        int doctorIndex = searchDoctorByID(appointment_record[i].doctor_id);
+        string tempname;
+
+        if (patientIndex == -1 || doctorIndex == -1) {
+            continue;
+        }
+
+        cout << left
+            << setw(19) << appointment_record[i].id
+            << setw(13) << appointment_record[i].patient_id;
+        if (patient_record[patientIndex].name.length() > 18) {
+            tempname = patient_record[patientIndex].name;
+            cout << setw(19) << tempname.replace(15, tempname.length() - 15, "...");
+        }
+        else {
+            cout << setw(19) << patient_record[patientIndex].name;
+        }
+        if (doctor_record[doctorIndex].name.length() > 18) {
+            tempname = doctor_record[doctorIndex].name;
+            cout << setw(19) << tempname.replace(15, tempname.length() - 15, "...");
+        }
+        else {
+            cout << setw(19) << doctor_record[doctorIndex].name;
+        }
+        cout << setw(11) << appointment_record[i].date
+            << setw(9) << appointment_record[i].time;
+
+        if (appointment_record[i].status == ASSIGNED) {
+            cout << "Scheduled";
+        }
+        else if (appointment_record[i].status == CANCELLED) {
+            cout << "Canceled";
+        }
+
+        cout << endl;
+    }
+}
+
+void calculateStatistics() {
+    int validAppointments = 0;
+    int cancelledAppointments = 0;
+    double cancellationRate = 0.0;
+    double averageAppointmentsPerDoctor = 0.0;
+
+    for (int i = 0;i < appointment_record.size();i++) {
+        if (appointment_record[i].status == ASSIGNED) {
+            validAppointments++;
+        }
+        else if (appointment_record[i].status == CANCELLED) {
+            cancelledAppointments++;
+        }
+    }
+
+    if (appointment_record.size() > 0) {
+        cancellationRate = (double)cancelledAppointments / (cancelledAppointments + validAppointments) * 100.0;
+    }
+
+    if (doctor_record.size() > 0) {
+        averageAppointmentsPerDoctor = (double)(cancelledAppointments + validAppointments) / doctor_record.size();
+    }
+
+    displayHeader("STATISTICS");
+
+    cout << "Valid Appointment               : " << validAppointments << endl
+        << "Canceled Appointment            : " << cancelledAppointments << endl
+        << "Cancellation Rate               : " << fixed << setprecision(2) << cancellationRate << "%" << endl
+        << "Average appointments Per Doctor : " << averageAppointmentsPerDoctor << endl << endl;
+}
+
+void sortPatientsByName() {
+    int order[MAX_RECORDS] = { 0 };
+    int temp, index;
+
+    int patientCount = static_cast<int>(patient_record.size());
+
+    if (patientCount == 0) {
+        cout << "No patient records found." << endl;
+        return;
+    }
+
+    for (int i = 0;i < patientCount;i++) {
+        order[i] = i;
+    }
+
+    for (int i = 0;i < patientCount - 1;i++) {
+        for (int j = 0;j < patientCount - 1 - i;j++) {
+            if (patient_record[order[j]].name > patient_record[order[j + 1]].name) {
+                temp = order[j];
+                order[j] = order[j + 1];
+                order[j + 1] = temp;
+            }
+        }
+    }
+    displayHeader("SORT PATIENTS BY NAME");
+    cout << left
+        << setw(20) << "Name"
+        << setw(13) << "ID"
+        << setw(12) << "Gender"
+        << setw(8) << "Age"
+        << "Phone" << endl;
+    cout << "-----------------------------------------------------------------------" << endl;
+
+    for (int i = 0;i < patientCount;i++) {
+        index = order[i];
+        string tempname;
+
+        cout << left;
+        if (patient_record[index].name.length() > 18) {
+            tempname = patient_record[index].name;
+            cout << setw(19) << tempname.replace(15, tempname.length() - 15, "...");
+        }
+        else {
+            cout << setw(19) << patient_record[index].name;
+        }
+        cout << setw(13) << patient_record[index].id;
+
+        if (patient_record[index].gender == MALE) {
+            cout << setw(12) << 'M';
+        }
+        else {
+            cout << setw(12) << 'F';
+        }
+
+        cout << setw(8) << patient_record[index].age
+            << patient_record[index].phone << endl;
+    }
+}
+
+void displayDoctorAppointment() {
+    int validAppointments[MAX_RECORDS] = { 0 };
+    int canceledAppointments[MAX_RECORDS] = { 0 };
+    int doctorIndex, totalValid = 0, totalCanceled = 0;
+    string tempname;
+
+    for (int i = 0;i < appointment_record.size();i++) {
+
+        doctorIndex = searchDoctorByID(appointment_record[i].doctor_id);
+
+        if (doctorIndex == -1) {
+            continue;
+        }
+        if (appointment_record[i].status == ASSIGNED) {
+            validAppointments[doctorIndex]++;
+        }
+        else if (appointment_record[i].status == CANCELLED) {
+            canceledAppointments[doctorIndex]++;
+        }
+    }
+
+    for (int i = 0;i < doctor_record.size();i++) {
+        totalValid += validAppointments[i];
+        totalCanceled += canceledAppointments[i];
+    }
+
+    displayHeader("DOCTOR APPOINTMENT ANALYSIS");
+    cout << left
+        << setw(13) << "ID"
+        << setw(20) << "Name"
+        << setw(13) << "Valid"
+        << "Canceled" << endl;
+    cout << "-----------------------------------------------------------" << endl;
+
+    for (int i = 0;i < doctor_record.size();i++) {
+        cout << left
+            << setw(13) << doctor_record[i].id;
+        if (doctor_record[i].name.length() > 18) {
+            tempname = doctor_record[i].name;
+            cout << setw(19) << tempname.replace(15, tempname.length() - 15, "...");
+        }
+        else {
+            cout << setw(19) << doctor_record[i].name;
+        }
+
+        cout << setw(13) << validAppointments[i]
+            << canceledAppointments[i] << endl;
+    }
+
+    cout << left
+        << setw(33) << "TOTAL"
+        << setw(13) << totalValid
+        << totalCanceled << endl;
+}
