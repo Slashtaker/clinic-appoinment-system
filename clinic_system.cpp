@@ -124,16 +124,18 @@ File_Status UpdateData(File_Type file_type);
 // MAIN PROGRAM
 
 int main() {
-    int choice;
+    int choice = 0;
 
     LoadData();
 
     do {
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cin >> choice;
-
         displayMainMenu();
+        if (!(cin >> choice)) {
+            cout << "Invalid choice. Please enter a number." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
 
         switch (choice) {
             case 1: patientMenu(); break;
@@ -145,7 +147,7 @@ int main() {
                 if (SaveData() == FAILURE) {
                     cout << "Failed to update data files." << endl;
                 }
-                cout << "Thank you for using the Clinic Management System.";
+                cout << "Thank you for using the Clinic Management System." << endl;
                 return 0;
             default: cout << "Invalid choice. Please try again." << endl;
         }
@@ -539,20 +541,22 @@ File_Status UpdateData(File_Type file_type) {
 void patientMenu() {
     displayHeader("Patient Management");
 
-    int choice;
+    int choice = 0;
 
     do {
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cin >> choice;
-
         cout << "1. Add Patient" << endl;
         cout << "2. Update Patient" << endl;
         cout << "3. Delete Patient" << endl;
         cout << "4. Search Patient By ID" << endl;
-        cout << "5. Display All Patient" << endl;
+        cout << "5. Display All Patients" << endl;
         cout << "6. Back To Main Page" << endl;
         cout << "Enter your choice: ";
+        if (!(cin >> choice)) {
+            cout << "Invalid choice. Please enter a number." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
 
         switch (choice) {
             case 1: {
@@ -570,7 +574,7 @@ void patientMenu() {
             case 4: {
                 string idx;
 
-                cin.ignore();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 cout << "Enter Patient ID to search: ";
                 getline(cin, idx);
 
@@ -578,7 +582,8 @@ void patientMenu() {
                 if (id != -1){
                     cout << "Found -> " << patient_record[id].name << endl;
                     cout << "Age: " << patient_record[id].age << endl;
-                    cout << "Gender: " << patient_record[id].gender << endl;
+                    cout << "Gender: "
+                         << (patient_record[id].gender == MALE ? "Male" : "Female") << endl;
                     cout << "Phone: " << patient_record[id].phone << "\n";
                 }
                 else{
@@ -587,7 +592,8 @@ void patientMenu() {
                 break;
             }
             case 5: {
-                //
+                displayAllPatients();
+                break;
             }
             case 6:{
                 cout << "Returning to main menu ... " << endl;
@@ -608,6 +614,8 @@ void addPatient() {
     int age;
     char gender;
     Gender gender_type;
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
     if (patient_record.size() >= MAX_RECORDS){
         cout << "Patient list is full" << endl;
@@ -706,24 +714,30 @@ void updatePatient(){
         cout << "3. Gender (M/F)" << endl;
         cout << "4. Phone Number" << endl;
         cout << "5. Back to Patient Menu" << endl;
-        cout << "Enter your choice: (1-5)";
-        cin >> choice;
-       
+        cout << "Enter your choice (1-5): ";
+        if (!(cin >> choice)) {
+            cout << "Invalid choice. Please enter a number." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
         switch (choice) {
             case 1:{
                 cout << "Enter new Name: ";
                 getline(cin, name);
                 while (name.empty()){
                     cout << "Name cannot be empty. Please enter again: ";
+                    getline(cin, name);
                 }
                 patient_record[index].name = name;
                 break;
             }
             case 2:{
                 cout << "Enter new Age: ";
-                cin >> age;
-                while (age < 0){
-                    cout << "Invalid Age. Please enter a positive answer.";
+                while (!(cin >> age) || age < 0){
+                    cout << "Invalid Age. Please enter a positive number: ";
                     cin.clear();
                     cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 }
@@ -781,6 +795,8 @@ void deletePatient(){
     string id;
     int index;
 
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
     cout << "Enter Patient ID to delete: ";
     getline(cin, id);
     while (searchPatientByID(id) == -1){
@@ -825,7 +841,7 @@ void displayAllPatients(){
         cout << "Patient ID: " << i.id << endl;
         cout << "Name: " << i.name << endl;
         cout << "Age: " << i.age << endl;
-        cout << "Gender: " << i.gender << endl;
+        cout << "Gender: " << (i.gender == MALE ? "Male" : "Female") << endl;
         cout << "Phone: " << i.phone << endl;
         cout << endl;
     }
@@ -837,13 +853,9 @@ void doctorMenu() {
 
     displayHeader("Doctor Management");
 
-    int choice;
+    int choice = 0;
 
     do {
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cin >> choice;
-
         cout << "1. Add Doctor" << endl;
         cout << "2. Update Doctor" << endl;
         cout << "3. Delete Doctor" << endl;
@@ -851,6 +863,12 @@ void doctorMenu() {
         cout << "5. Display All Doctors" << endl;
         cout << "6. Back To Main Page" << endl;
         cout << "Enter your choice: ";
+        if (!(cin >> choice)) {
+            cout << "Invalid choice. Please enter a number." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
 
         switch (choice) {
             case 1: {
@@ -868,7 +886,7 @@ void doctorMenu() {
             case 4:{ 
                 string idx;
 
-                cin.ignore();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 cout << "Enter Doctor ID to search: ";
 
                 getline(cin, idx);
@@ -881,7 +899,8 @@ void doctorMenu() {
                 break;
             }
             case 5: {
-                //
+                displayAllDoctors();
+                break;
             }
             case 6:{
                 cout << "Returning to main menu ... " << endl;
@@ -901,6 +920,8 @@ void addDoctor(){
 
     string id, name, specialty;
     double fee;
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
     if (doctor_record.size() >= MAX_RECORDS){
         cout << "Doctor list is full" << endl;
@@ -981,15 +1002,22 @@ void updateDoctor(){
         cout << "2. Specialty" << endl;
         cout << "3. Consultation Fee" << endl;
         cout << "4. Back to Doctor Menu" << endl;
-        cout << "Enter your choice: (1-4)";
-        cin >> choice;
-       
+        cout << "Enter your choice (1-4): ";
+        if (!(cin >> choice)) {
+            cout << "Invalid choice. Please enter a number." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
         switch (choice) {
         case 1:{
             cout << "Enter new Name: ";
             getline(cin, name);
             while (name.empty()){
                 cout << "Name cannot be empty. Please enter again: ";
+                getline(cin, name);
             }
             doctor_record[index].name = name;
             break;
@@ -1006,7 +1034,6 @@ void updateDoctor(){
         }
         case 3:{
             cout << "Enter new Consultation Fee: ";
-            cin >> fee;
             while (!(cin >> fee) || fee < 0){
                 cout << "Invalid fee. Please enter a positive number: ";
                 cin.clear();
@@ -1038,6 +1065,8 @@ void deleteDoctor(){
 
     string id;
     int index;
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
     cout << "Enter Doctor ID to delete: ";
     getline(cin, id);
@@ -1094,7 +1123,7 @@ void medicineMenu() {
 
     displayHeader("Medicine Management");
 
-    int choice;
+    int choice = 0;
 
     do {
 
@@ -1106,8 +1135,12 @@ void medicineMenu() {
         cout << "6. Display All Medicines" << endl;
         cout << "7. Back To Main Page" << endl;
         cout << "Enter your choice: ";
-
-        cin >> choice;
+        if (!(cin >> choice)) {
+            cout << "Invalid choice. Please enter a number." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
         switch (choice) {
@@ -1461,19 +1494,21 @@ void displayAllMedicines() {
 void appointmentMenu() {
     displayHeader("Appointment Management");
 
-    int choice;
+    int choice = 0;
 
     do {
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cin >> choice;
-
-        cout << "1. Create Appoinment" << endl;
-        cout << "2. Cancel Appoinment" << endl;
-        cout << "3. Modify Appoinment" << endl;
+        cout << "1. Create Appointment" << endl;
+        cout << "2. Cancel Appointment" << endl;
+        cout << "3. Modify Appointment" << endl;
         cout << "4. Display All Appointments" << endl;
         cout << "5. Back to Main Menu" << endl;
         cout << "Enter your choice: ";
+        if (!(cin >> choice)) {
+            cout << "Invalid choice. Please enter a number." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
 
         switch (choice) {
             case 1: createAppointment(); break;
@@ -1702,14 +1737,19 @@ int searchAppointmentByID(const string& appointment_ID) {
 }
 
 void displayAllAppointments() {
-    cout << endl;
+    if (appointment_record.empty()) {
+        cout << "No appointment records found." << endl;
+        return;
+    }
+
+    displayHeader("All Appointments (" + to_string(appointment_record.size()) + ")");
     for (auto & i : appointment_record) {
         cout << "Appointment ID: " << i.id << endl;
-        cout << "Doctor ID: " << i.doctor_id << endl;
         cout << "Patient ID: " << i.patient_id << endl;
+        cout << "Doctor ID: " << i.doctor_id << endl;
         cout << "Date: " << i.date << endl;
         cout << "Time: " << i.time << endl;
-        cout << "Status: " << i.status << endl;
+        cout << "Status: " << (i.status == ASSIGNED ? "Assigned" : "Cancelled") << endl;
         cout << endl;
     }
 }
@@ -1735,7 +1775,7 @@ string generateAppointmentID() {
 // Module 4: Reporting Module
 
 void reportMenu() {
-    int choice;
+    int choice = 0;
     do {
         displayHeader("REPORTING SYSTEM");
         cout << "1. Summary Report" << endl;
@@ -1744,8 +1784,13 @@ void reportMenu() {
         cout << "4. Sort Patients By Name" << endl;
         cout << "5. Display Doctor Appointment" << endl;
         cout << "6. Back To Main Menu" << endl;
-        cout << "Enter your choice : ";
-        cin >> choice;
+        cout << "Enter your choice: ";
+        if (!(cin >> choice)) {
+            cout << "Invalid choice. Please enter a number." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
         cout << endl;
 
         switch (choice) {
@@ -1817,7 +1862,7 @@ void generateDetailedReport() {
         << setw(19) << "Appointment ID"
         << setw(13) << "Patient ID"
         << setw(19) << "Patient Name"
-        << setw(18) << "Doctor Name"
+        << setw(19) << "Doctor Name"
         << setw(11) << "Date"
         << setw(9) << "Time"
         << "Status" << endl;
@@ -1856,7 +1901,7 @@ void generateDetailedReport() {
             cout << "Scheduled";
         }
         else if (appointment_record[i].status == CANCELLED) {
-            cout << "Canceled";
+            cout << "Cancelled";
         }
 
         cout << endl;
@@ -1889,7 +1934,7 @@ void calculateStatistics() {
     displayHeader("STATISTICS");
 
     cout << "Valid Appointment               : " << validAppointments << endl
-        << "Canceled Appointment            : " << cancelledAppointments << endl
+        << "Cancelled Appointment            : " << cancelledAppointments << endl
         << "Cancellation Rate               : " << fixed << setprecision(2) << cancellationRate << "%" << endl
         << "Average appointments Per Doctor : " << averageAppointmentsPerDoctor << endl << endl;
 }
@@ -1920,7 +1965,7 @@ void sortPatientsByName() {
     }
     displayHeader("SORT PATIENTS BY NAME");
     cout << left
-        << setw(20) << "Name"
+        << setw(19) << "Name"
         << setw(13) << "ID"
         << setw(12) << "Gender"
         << setw(8) << "Age"
@@ -1982,9 +2027,9 @@ void displayDoctorAppointment() {
     displayHeader("DOCTOR APPOINTMENT ANALYSIS");
     cout << left
         << setw(13) << "ID"
-        << setw(20) << "Name"
+        << setw(19) << "Name"
         << setw(13) << "Valid"
-        << "Canceled" << endl;
+        << "Cancelled" << endl;
     cout << "-----------------------------------------------------------" << endl;
 
     for (int i = 0;i < doctor_record.size();i++) {
@@ -2003,7 +2048,7 @@ void displayDoctorAppointment() {
     }
 
     cout << left
-        << setw(33) << "TOTAL"
+        << setw(32) << "TOTAL"
         << setw(13) << totalValid
         << totalCanceled << endl;
 }
