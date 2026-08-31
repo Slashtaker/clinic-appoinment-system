@@ -1088,6 +1088,374 @@ void displayAllDoctors(){
     }
 }
 
+// Module 2: Medicine Mangement Menu
+
+void medicineMenu() {
+
+    displayHeader("Medicine Management");
+
+    int choice;
+
+    do {
+
+        cout << "1. Add Medicine" << endl;
+        cout << "2. Update Medicine" << endl;
+        cout << "3. Delete Medicine" << endl;
+        cout << "4. Search Medicine By ID" << endl;
+        cout << "5. Search Medicine By Name" << endl;
+        cout << "6. Display All Medicines" << endl;
+        cout << "7. Back To Main Page" << endl;
+        cout << "Enter your choice: ";
+
+        cin >> choice;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        switch (choice) {
+
+        case 1: {
+            addMedicine();
+            break;
+        }
+
+        case 2: {
+            updateMedicine();
+            break;
+        }
+
+        case 3: {
+            deleteMedicine();
+            break;
+        }
+
+        case 4: {
+            string id;
+
+            cout << "Enter Medicine ID to search: ";
+            getline(cin, id);
+
+            int index = searchMedicineByID(id);
+
+            if (index != -1) {
+                cout << "Found -> " << medicine_record[index].name << endl;
+                cout << "Description: " << medicine_record[index].description << endl;
+                cout << "Price: RM " << fixed << setprecision(2)
+                    << medicine_record[index].price << endl;
+            }
+            else {
+                cout << "Medicine not found." << endl;
+            }
+
+            break;
+        }
+
+        case 5: {
+            string name;
+
+            cout << "Enter Medicine Name to search: ";
+            getline(cin, name);
+
+            int index = searchMedicineByName(name);
+
+            if (index != -1) {
+                cout << "Found -> " << medicine_record[index].id << endl;
+                cout << "Name: " << medicine_record[index].name << endl;
+                cout << "Description: " << medicine_record[index].description << endl;
+                cout << "Price: RM " << fixed << setprecision(2)
+                    << medicine_record[index].price << endl;
+            }
+            else {
+                cout << "Medicine not found." << endl;
+            }
+
+            break;
+        }
+
+        case 6: {
+            displayAllMedicines();
+            break;
+        }
+
+        case 7: {
+            cout << "Returning to main menu ..." << endl;
+            break;
+        }
+
+        default: {
+            cout << "Invalid choice. Please try again." << endl;
+            break;
+        }
+        }
+
+    } while (choice != 7);
+}
+
+
+void addMedicine() {
+
+    string id, name, description;
+    double price;
+
+    if (medicine_record.size() >= MAX_RECORDS) {
+        cout << "Medicine list is full." << endl;
+        return;
+    }
+
+    cout << "Enter Medicine Name: ";
+    getline(cin, name);
+
+    while (name.empty()) {
+        cout << "Name cannot be empty. Please enter again: ";
+        getline(cin, name);
+    }
+
+    cout << "Enter Description: ";
+    getline(cin, description);
+
+    while (description.empty()) {
+        cout << "Description cannot be empty. Please enter again: ";
+        getline(cin, description);
+    }
+
+    cout << "Enter Price: ";
+
+    while (!(cin >> price) || price < 0) {
+        cout << "Invalid price. Please enter a positive number: ";
+
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    id = "M" + to_string(medicine_record.size() + 1);
+
+    medicine_record.push_back({
+        id,
+        name,
+        description,
+        price
+        });
+
+    if (UpdateData(MEDICINE) == FAILURE) {
+        cout << "Failed to update medicine data file." << endl;
+    }
+
+    cout << "Medicine added successfully. Medicine ID: "
+        << id << endl;
+}
+
+
+void updateMedicine() {
+
+    string id;
+    int choice;
+    int index;
+
+    cout << "Enter Medicine ID to update: ";
+    getline(cin, id);
+
+    while (searchMedicineByID(id) == -1) {
+
+        if (id.empty()) {
+            cout << "ID cannot be empty. Please enter again: ";
+        }
+        else {
+            cout << "Medicine not found. Please enter again: ";
+        }
+
+        getline(cin, id);
+    }
+
+    index = searchMedicineByID(id);
+
+    do {
+
+        cout << endl;
+        cout << "What do you want to update?" << endl;
+        cout << "1. Name" << endl;
+        cout << "2. Description" << endl;
+        cout << "3. Price" << endl;
+        cout << "4. Back to Medicine Menu" << endl;
+        cout << "Enter your choice: ";
+
+        cin >> choice;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        switch (choice) {
+
+        case 1: {
+
+            string name;
+
+            cout << "Enter new Medicine Name: ";
+            getline(cin, name);
+
+            while (name.empty()) {
+                cout << "Name cannot be empty. Please enter again: ";
+                getline(cin, name);
+            }
+
+            medicine_record[index].name = name;
+
+            cout << "Medicine name updated successfully." << endl;
+
+            break;
+        }
+
+        case 2: {
+
+            string description;
+
+            cout << "Enter new Description: ";
+            getline(cin, description);
+
+            while (description.empty()) {
+                cout << "Description cannot be empty. Please enter again: ";
+                getline(cin, description);
+            }
+
+            medicine_record[index].description = description;
+
+            cout << "Medicine description updated successfully." << endl;
+
+            break;
+        }
+
+        case 3: {
+
+            double price;
+
+            cout << "Enter new Price: ";
+
+            while (!(cin >> price) || price < 0) {
+                cout << "Invalid price. Please enter a positive number: ";
+
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            }
+
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+            medicine_record[index].price = price;
+
+            cout << "Medicine price updated successfully." << endl;
+
+            break;
+        }
+
+        case 4: {
+
+            cout << "Returning to medicine menu ..." << endl;
+
+            break;
+        }
+
+        default: {
+
+            cout << "Invalid choice. Please try again." << endl;
+
+            break;
+        }
+        }
+
+        if (choice >= 1 && choice <= 3) {
+
+            if (UpdateData(MEDICINE) == FAILURE) {
+                cout << "Failed to update medicine data file." << endl;
+            }
+        }
+
+    } while (choice != 4);
+
+    cout << "Medicine ID: " << medicine_record[index].id << endl;
+}
+
+
+void deleteMedicine() {
+
+    string id;
+    int index;
+
+    cout << "Enter Medicine ID to delete: ";
+    getline(cin, id);
+
+    while (searchMedicineByID(id) == -1) {
+
+        if (id.empty()) {
+            cout << "ID cannot be empty. Please enter again: ";
+        }
+        else {
+            cout << "Medicine not found. Please enter again: ";
+        }
+
+        getline(cin, id);
+    }
+
+    index = searchMedicineByID(id);
+
+    medicine_record.erase(medicine_record.begin() + index);
+
+    if (UpdateData(MEDICINE) == FAILURE) {
+        cout << "Failed to update medicine data file." << endl;
+    }
+
+    cout << "Medicine deleted successfully. Medicine ID: "
+        << id << endl;
+}
+
+
+int searchMedicineByID(string& id) {
+
+    for (int i = 0; i < medicine_record.size(); i++) {
+
+        if (medicine_record[i].id == id) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+
+int searchMedicineByName(const string& name) {
+
+    for (int i = 0; i < medicine_record.size(); i++) {
+
+        if (medicine_record[i].name == name) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+
+void displayAllMedicines() {
+
+    if (medicine_record.empty()) {
+        cout << "No medicine records found." << endl;
+        return;
+    }
+
+    displayHeader(
+        "All Medicines (" +
+        to_string(medicine_record.size()) +
+        ")"
+    );
+
+    for (auto& i : medicine_record) {
+
+        cout << "Medicine ID: " << i.id << endl;
+        cout << "Name: " << i.name << endl;
+        cout << "Description: " << i.description << endl;
+        cout << "Price: RM "
+            << fixed << setprecision(2)
+            << i.price << endl;
+
+        cout << endl;
+    }
+}
+
 // Module 3: Appointment Booking
 
 void appointmentMenu() {
