@@ -2,12 +2,65 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
-#include <limits>
+
 
 #include <sstream>
-#include <random>
 
 using namespace std;
+
+enum InputType { TEXT_INPUT, INTEGER_INPUT, DECIMAL_INPUT, CHARACTER_INPUT };
+
+// Reads one complete line, rejects empty input, and validates numeric values.
+string readInput(const string& prompt, InputType inputType = TEXT_INPUT,
+                 bool allowEmpty = false) {
+    while (true) {
+        cout << prompt;
+
+        string input;
+        getline(cin, input);
+
+        if (input.empty() && !allowEmpty) {
+            cout << "Input cannot be empty. Please try again." << endl;
+            continue;
+        }
+
+        if (inputType == TEXT_INPUT) {
+            return input;
+        }
+
+        stringstream inputStream(input);
+        char extraCharacter;
+
+        if (inputType == INTEGER_INPUT) {
+            int value;
+            if (!(inputStream >> value) || inputStream >> extraCharacter) {
+                cout << "Invalid whole number. Please try again." << endl;
+                continue;
+            }
+            if (value < 0) {
+                cout << "Negative values are not allowed. Please try again." << endl;
+                continue;
+            }
+        }
+        else if (inputType == DECIMAL_INPUT) {
+            double value;
+            if (!(inputStream >> value) || inputStream >> extraCharacter) {
+                cout << "Invalid number. Please try again." << endl;
+                continue;
+            }
+            if (value < 0) {
+                cout << "Negative values are not allowed. Please try again." << endl;
+                continue;
+            }
+        }
+        else if (inputType == CHARACTER_INPUT && input.length() != 1) {
+            cout << "Please enter one character." << endl;
+            continue;
+        }
+
+        return input;
+    }
+}
 
 enum Gender { MALE, FEMALE };
 enum Status { ASSIGNED, CANCELLED };
@@ -50,7 +103,7 @@ struct AppointmentRecord
 };
 
 // GLOBAL CONSTANTS
-const int MAX_RECORDS = 100;    // capacity per module (assignment requires at least 50)
+const int MAX_RECORDS = 100;    // capacity per module
 const string Patient_file_path = "patient.csv";
 const string Doctor_file_path = "doctor.csv";
 const string Medicine_file_path = "medicine.csv";
@@ -139,12 +192,7 @@ int main() {
 
     do {
         displayMainMenu();
-        if (!(cin >> choice)) {
-            cout << "Invalid choice. Please enter a number." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue;
-        }
+        choice = stoi(readInput("Enter your choice: ", INTEGER_INPUT));
 
         switch (choice) {
             case 1: patientMenu(); break;
@@ -174,7 +222,6 @@ void displayMainMenu() {
     cout << "4. Appointment Management" << endl;
     cout << "5. Reporting" << endl;
     cout << "6. Exit" << endl;
-    cout << "Enter your choice: ";
 
 }
 
@@ -596,44 +643,35 @@ File_Status UpdateData(File_Type file_type) {
 //Patient Management Menu
 
 void patientMenu() {
-    displayHeader("Patient Management");
 
     int choice = 0;
 
     do {
+        displayHeader("Patient Management");
+
         cout << "1. Add Patient" << endl;
         cout << "2. Update Patient" << endl;
         cout << "3. Delete Patient" << endl;
         cout << "4. Search Patient By ID" << endl;
         cout << "5. Display All Patients" << endl;
         cout << "6. Back To Main Page" << endl;
-        cout << "Enter your choice: ";
-        if (!(cin >> choice)) {
-            cout << "Invalid choice. Please enter a number." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue;
-        }
+        choice = stoi(readInput("Enter your choice: ", INTEGER_INPUT));
 
         switch (choice) {
             case 1: {
-                addPatient(); 
+                addPatient();
                 break;
             }
-            case 2:{ 
-                updatePatient(); 
+            case 2:{
+                updatePatient();
                 break;
             }
-            case 3:{ 
-                deletePatient(); 
+            case 3:{
+                deletePatient();
                 break;
             }
             case 4: {
-                string idx;
-
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                cout << "Enter Patient ID to search: ";
-                getline(cin, idx);
+                string idx = readInput("Enter Patient ID to search: ", TEXT_INPUT, false);
 
                 int id = searchPatientByID(idx);
                 if (id != -1){
@@ -656,7 +694,7 @@ void patientMenu() {
                 cout << "Returning to main menu ... " << endl;
                 break;
             }
-            default:{ 
+            default:{
                 cout << "Invalid choice. Please try again." << endl;
                 break;
             }
@@ -672,43 +710,25 @@ void addPatient() {
     char gender;
     Gender gender_type;
 
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
     if (patient_count >= MAX_RECORDS){
         cout << "Patient list is full" << endl;
         return;
     }
 
-    cout << "Enter Name: ";
-    getline(cin, name);
-    while (name.empty()){
-        cout << "Name cannot be empty. Please enter again: ";
-        getline(cin, name);
-    }
+    name = readInput("Enter Name: ");
 
-    cout << "Enter age: ";
-    while (!(cin >> age) || age < 0) {
-        cout << "Invalid Age. Please enter a positive answer.";
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    }
+    age = stoi(readInput("Enter age: ", INTEGER_INPUT));
 
-   
-    cout << "Enter Gender (M/F): ";
-    cin >> gender;
-    while (toupper(gender) != 'M' && toupper(gender) != 'F'){
-        cout << "Invalid Gender. Please enter M or F: ";
-        cin >> gender;
-    }
+    do {
+        gender = readInput("Enter Gender (M/F): ", CHARACTER_INPUT)[0];
+        if (toupper(static_cast<unsigned char>(gender)) != 'M'
+            && toupper(static_cast<unsigned char>(gender)) != 'F') {
+            cout << "Invalid Gender. Please enter M or F." << endl;
+        }
+    } while (toupper(static_cast<unsigned char>(gender)) != 'M'
+             && toupper(static_cast<unsigned char>(gender)) != 'F');
 
-    cout << "Enter Phone Number: ";
-    cin >> phone;
-    while (phone.empty()){
-        cout << "Phone number cannot be empty. Please enter again: ";
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cin >> phone;
-    }
+    phone = readInput("Enter Phone Number: ");
 
     if (toupper(gender) == 'M') {
         gender_type = MALE;
@@ -747,28 +767,14 @@ void updatePatient(){
     char gender;
     Gender gender_type;
 
-    cout << "Enter Patient ID to update: ";
-    cin.clear();
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    getline(cin, id);
+    id = readInput("Enter Patient ID to update: ");
     while (searchPatientByID(id) == -1){
-        if (id.empty()){
-            cout << "ID cannot be empty. Please enter again (type 0 to cancel): ";
-            getline(cin, id);
+        cout << "Patient not found." << endl;
+        id = readInput("Please enter again (type 0 to cancel): ");
 
-            if (id == "0") {
-                cout << "Operation cancelled." << endl;
-                return;
-            }
-        }
-        else{
-            cout << "Patient not found. Please enter again (type 0 to cancel): ";
-            getline(cin, id);
-
-            if (id == "0") {
-                cout << "Operation cancelled." << endl;
-                return;
-            }
+        if (id == "0") {
+            cout << "Operation cancelled." << endl;
+            return;
         }
     }
 
@@ -782,44 +788,29 @@ void updatePatient(){
         cout << "3. Gender (M/F)" << endl;
         cout << "4. Phone Number" << endl;
         cout << "5. Back to Patient Menu" << endl;
-        cout << "Enter your choice (1-5): ";
-        if (!(cin >> choice)) {
-            cout << "Invalid choice. Please enter a number." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue;
-        }
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        choice = stoi(readInput("Enter your choice (1-5): ", INTEGER_INPUT));
 
         switch (choice) {
             case 1:{
-                cout << "Enter new Name: ";
-                getline(cin, name);
-                while (name.empty()){
-                    cout << "Name cannot be empty. Please enter again: ";
-                    getline(cin, name);
-                }
+                name = readInput("Enter new Name: ");
                 patient_record[0][index].name = name;
                 break;
             }
             case 2:{
-                cout << "Enter new Age: ";
-                while (!(cin >> age) || age < 0){
-                    cout << "Invalid Age. Please enter a positive number: ";
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                }
+                age = stoi(readInput("Enter new Age: ", INTEGER_INPUT));
                 patient_record[0][index].age = age;
                 break;
             }
             case 3:{
-                cout << "Enter new Gender (M/F): ";
-                cin >> gender;
-                while (toupper(gender) != 'M' && toupper(gender) != 'F'){
-                    cout << "Invalid Gender. Please enter M or F: ";
-                    cin >> gender;
-                }
-                if (toupper(gender) == 'M'){
+                do {
+                    gender = readInput("Enter new Gender (M/F): ", CHARACTER_INPUT)[0];
+                    if (toupper(static_cast<unsigned char>(gender)) != 'M'
+                        && toupper(static_cast<unsigned char>(gender)) != 'F') {
+                        cout << "Invalid Gender. Please enter M or F." << endl;
+                    }
+                } while (toupper(static_cast<unsigned char>(gender)) != 'M'
+                         && toupper(static_cast<unsigned char>(gender)) != 'F');
+                if (toupper(static_cast<unsigned char>(gender)) == 'M'){
                     gender_type = MALE;
                 }
                 else{
@@ -829,14 +820,7 @@ void updatePatient(){
                 break;
             }
             case 4: {
-                cout << "Enter new Phone Number: ";
-                cin >> phone;
-                while (phone.empty()){
-                    cout << "Phone number cannot be empty. Please enter again: ";
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                    getline(cin, phone);
-                }
+                phone = readInput("Enter new Phone Number: ");
                 patient_record[0][index].phone = phone;
                 break;
             }
@@ -863,28 +847,14 @@ void deletePatient(){
     string id;
     int index;
 
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    cout << "Enter Patient ID to delete: ";
-    getline(cin, id);
+    id = readInput("Enter Patient ID to delete: ");
     while (searchPatientByID(id) == -1){
-        if (id.empty()){
-            cout << "ID cannot be empty. Please enter again (type 0 to cancel): ";
-            getline(cin, id);
+        cout << "Patient not found." << endl;
+        id = readInput("Please enter again (type 0 to cancel): ");
 
-            if (id == "0") {
-                cout << "Operation cancelled." << endl;
-                return;
-            }
-        }
-        else{
-            cout << "Patient not found. Please enter again (type 0 to cancel): ";
-            getline(cin, id);
-
-            if (id == "0") {
-                cout << "Operation cancelled." << endl;
-                return;
-            }
+        if (id == "0") {
+            cout << "Operation cancelled." << endl;
+            return;
         }
     }
     index = searchPatientByID(id);
@@ -944,34 +914,23 @@ void doctorMenu() {
         cout << "4. Search Doctor By ID" << endl;
         cout << "5. Display All Doctors" << endl;
         cout << "6. Back To Main Page" << endl;
-        cout << "Enter your choice: ";
-        if (!(cin >> choice)) {
-            cout << "Invalid choice. Please enter a number." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue;
-        }
+        choice = stoi(readInput("Enter your choice: ", INTEGER_INPUT));
 
         switch (choice) {
             case 1: {
-                addDoctor(); 
+                addDoctor();
                 break;
             }
-            case 2:{ 
-                updateDoctor(); 
+            case 2:{
+                updateDoctor();
                 break;
             }
-            case 3:{ 
-                deleteDoctor(); 
+            case 3:{
+                deleteDoctor();
                 break;
             }
-            case 4:{ 
-                string idx;
-
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                cout << "Enter Doctor ID to search: ";
-
-                getline(cin, idx);
+            case 4:{
+                string idx = readInput("Enter Doctor ID to search: ");
                 int id = searchDoctorByID(idx);
                 if (id != -1)
                     cout << "Found -> " << doctor_record[0][id].name << ", Specialty: " << doctor_record[0][id].specialty
@@ -988,13 +947,13 @@ void doctorMenu() {
                 cout << "Returning to main menu ... " << endl;
                 break;
             }
-            default:{ 
+            default:{
                 cout << "Invalid choice. Please try again." << endl;
                 break;
             }
-        
 
-        } 
+
+        }
     } while (choice != 6);
 }
 
@@ -1003,33 +962,14 @@ void addDoctor(){
     string id, name, specialty;
     double fee;
 
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
     if (doctor_count >= MAX_RECORDS){
         cout << "Doctor list is full" << endl;
         return;
     }
 
-    cout << "Enter Name: ";
-    getline(cin, name);
-    while (name.empty()){
-        cout << "Name cannot be empty. Please enter again: ";
-        getline(cin, name);
-    }
-
-    cout << "Enter Specialization: ";
-    getline(cin, specialty);
-    while (specialty.empty()){
-        cout << "Specialization cannot be empty. Please enter again: ";
-        getline(cin, specialty);
-    }
-
-    cout << "Enter consultation fee: ";
-    while (!(cin >> fee) || fee < 0){
-        cout << "Invalid fee. Please enter a positive number: ";
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    }
+    name = readInput("Enter Name: ");
+    specialty = readInput("Enter Specialization: ");
+    fee = stod(readInput("Enter consultation fee: ", DECIMAL_INPUT));
 
     int biggest = 0;
     for (int i = 0; i < doctor_count; ++i) {
@@ -1061,28 +1001,14 @@ void updateDoctor(){
     int choice, index;
     double fee;
 
-    cout << "Enter Doctor ID to update: ";
-    cin.clear();
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    getline(cin, id);
+    id = readInput("Enter Doctor ID to update: ");
     while (searchDoctorByID(id) == -1){
-        if (id.empty()){
-            cout << "ID cannot be empty. Please enter again (type 0 to cancel): ";
-            getline(cin, id);
+        cout << "Doctor not found." << endl;
+        id = readInput("Please enter again (type 0 to cancel): ");
 
-            if (id == "0") {
-                cout << "Operation cancelled." << endl;
-                return;
-            }
-        }
-        else{
-            cout << "Doctor not found. Please enter again (type 0 to cancel): ";
-            getline(cin, id);
-
-            if (id == "0") {
-                cout << "Operation cancelled." << endl;
-                return;
-            }
+        if (id == "0") {
+            cout << "Operation cancelled." << endl;
+            return;
         }
     }
 
@@ -1094,43 +1020,21 @@ void updateDoctor(){
         cout << "2. Specialty" << endl;
         cout << "3. Consultation Fee" << endl;
         cout << "4. Back to Doctor Menu" << endl;
-        cout << "Enter your choice (1-4): ";
-        if (!(cin >> choice)) {
-            cout << "Invalid choice. Please enter a number." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue;
-        }
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        choice = stoi(readInput("Enter your choice (1-4): ", INTEGER_INPUT));
 
         switch (choice) {
         case 1:{
-            cout << "Enter new Name: ";
-            getline(cin, name);
-            while (name.empty()){
-                cout << "Name cannot be empty. Please enter again: ";
-                getline(cin, name);
-            }
+            name = readInput("Enter new Name: ");
             doctor_record[0][index].name = name;
             break;
         }
         case 2:{
-            cout << "Enter new Specialty: ";
-            getline(cin, specialty);
-            while (specialty.empty()){
-                cout << "Specialty cannot be empty. Please enter again: ";
-                getline(cin, specialty);
-            }
+            specialty = readInput("Enter new Specialty: ");
             doctor_record[0][index].specialty = specialty;
             break;
         }
         case 3:{
-            cout << "Enter new Consultation Fee: ";
-            while (!(cin >> fee) || fee < 0){
-                cout << "Invalid fee. Please enter a positive number: ";
-                cin.clear();
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            }
+            fee = stod(readInput("Enter new Consultation Fee: ", DECIMAL_INPUT));
             doctor_record[0][index].fee = fee;
             break;
         }
@@ -1158,27 +1062,13 @@ void deleteDoctor(){
     string id;
     int index;
 
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    cout << "Enter Doctor ID to delete: ";
-    getline(cin, id);
+    id = readInput("Enter Doctor ID to delete: ");
     while (searchDoctorByID(id) == -1){
-        if (id.empty()){
-            cout << "ID cannot be empty. Please enter again (type 0 to cancel): ";
-            getline(cin, id);
-
-            if (id == "0") {
-                cout << "Operation cancelled." << endl;
-                return;
-            }
-
-        } else {
-            cout << "Doctor not found. Please enter again (type 0 to cancel): ";
-            getline(cin, id);
-            if (id == "0") {
-                cout << "Operation cancelled." << endl;
-                return;
-            }
+        cout << "Doctor not found." << endl;
+        id = readInput("Please enter again (type 0 to cancel): ");
+        if (id == "0") {
+            cout << "Operation cancelled." << endl;
+            return;
         }
     }
     index = searchDoctorByID(id);
@@ -1240,14 +1130,7 @@ void medicineMenu() {
         cout << "5. Search Medicine By Name" << endl;
         cout << "6. Display All Medicines" << endl;
         cout << "7. Back To Main Page" << endl;
-        cout << "Enter your choice: ";
-        if (!(cin >> choice)) {
-            cout << "Invalid choice. Please enter a number." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue;
-        }
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        choice = stoi(readInput("Enter your choice: ", INTEGER_INPUT));
 
         switch (choice) {
 
@@ -1267,10 +1150,7 @@ void medicineMenu() {
         }
 
         case 4: {
-            string id;
-
-            cout << "Enter Medicine ID to search: ";
-            getline(cin, id);
+            string id = readInput("Enter Medicine ID to search: ");
 
             int index = searchMedicineByID(id);
 
@@ -1288,10 +1168,7 @@ void medicineMenu() {
         }
 
         case 5: {
-            string name;
-
-            cout << "Enter Medicine Name to search: ";
-            getline(cin, name);
+            string name = readInput("Enter Medicine Name to search: ");
 
             int index = searchMedicineByName(name);
 
@@ -1339,32 +1216,9 @@ void addMedicine() {
         return;
     }
 
-    cout << "Enter Medicine Name: ";
-    getline(cin, name);
-
-    while (name.empty()) {
-        cout << "Name cannot be empty. Please enter again: ";
-        getline(cin, name);
-    }
-
-    cout << "Enter Description: ";
-    getline(cin, description);
-
-    while (description.empty()) {
-        cout << "Description cannot be empty. Please enter again: ";
-        getline(cin, description);
-    }
-
-    cout << "Enter Price: ";
-
-    while (!(cin >> price) || price < 0) {
-        cout << "Invalid price. Please enter a positive number: ";
-
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    }
-
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    name = readInput("Enter Medicine Name: ");
+    description = readInput("Enter Description: ");
+    price = stod(readInput("Enter Price: ", DECIMAL_INPUT));
 
     id = "M" + to_string(medicine_count + 1);
 
@@ -1390,23 +1244,15 @@ void updateMedicine() {
     int choice;
     int index;
 
-    cout << "Enter Medicine ID to update: ";
-    getline(cin, id);
+    id = readInput("Enter Medicine ID to update: ");
 
     while (searchMedicineByID(id) == -1) {
-
-        if (id.empty()) {
-            cout << "ID cannot be empty. Please enter again (type 0 to cancel): ";
-        }
-        else {
-            cout << "Medicine not found. Please enter again (type 0 to cancel): ";
-        }
-
-        getline(cin, id);
+        cout << "Medicine not found." << endl;
+        id = readInput("Please enter again (type 0 to cancel): ");
         if (id == "0") {
             cout << "Operation cancelled." << endl;
             return;
-            }
+        }
     }
 
     index = searchMedicineByID(id);
@@ -1419,24 +1265,13 @@ void updateMedicine() {
         cout << "2. Description" << endl;
         cout << "3. Price" << endl;
         cout << "4. Back to Medicine Menu" << endl;
-        cout << "Enter your choice: ";
-
-        cin >> choice;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        choice = stoi(readInput("Enter your choice: ", INTEGER_INPUT));
 
         switch (choice) {
 
         case 1: {
 
-            string name;
-
-            cout << "Enter new Medicine Name: ";
-            getline(cin, name);
-
-            while (name.empty()) {
-                cout << "Name cannot be empty. Please enter again: ";
-                getline(cin, name);
-            }
+            string name = readInput("Enter new Medicine Name: ");
 
             medicine_record[0][index].name = name;
 
@@ -1447,15 +1282,7 @@ void updateMedicine() {
 
         case 2: {
 
-            string description;
-
-            cout << "Enter new Description: ";
-            getline(cin, description);
-
-            while (description.empty()) {
-                cout << "Description cannot be empty. Please enter again: ";
-                getline(cin, description);
-            }
+            string description = readInput("Enter new Description: ");
 
             medicine_record[0][index].description = description;
 
@@ -1466,18 +1293,7 @@ void updateMedicine() {
 
         case 3: {
 
-            double price;
-
-            cout << "Enter new Price: ";
-
-            while (!(cin >> price) || price < 0) {
-                cout << "Invalid price. Please enter a positive number: ";
-
-                cin.clear();
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            }
-
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            double price = stod(readInput("Enter new Price: ", DECIMAL_INPUT));
 
             medicine_record[0][index].price = price;
 
@@ -1519,19 +1335,11 @@ void deleteMedicine() {
     string id;
     int index;
 
-    cout << "Enter Medicine ID to delete: ";
-    getline(cin, id);
+    id = readInput("Enter Medicine ID to delete: ");
 
     while (searchMedicineByID(id) == -1) {
-
-        if (id.empty()) {
-            cout << "ID cannot be empty. Please enter again (type 0 to cancel): ";
-        }
-        else {
-            cout << "Medicine not found. Please enter again (type 0 to cancel): ";
-        }
-
-        getline(cin, id);
+        cout << "Medicine not found." << endl;
+        id = readInput("Please enter again (type 0 to cancel): ");
         if (id == "0") {
             cout << "Operation cancelled." << endl;
             return;
@@ -1619,13 +1427,7 @@ void appointmentMenu() {
         cout << "3. Modify Appointment" << endl;
         cout << "4. Display All Appointments" << endl;
         cout << "5. Back to Main Menu" << endl;
-        cout << "Enter your choice: ";
-        if (!(cin >> choice)) {
-            cout << "Invalid choice. Please enter a number." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue;
-        }
+        choice = stoi(readInput("Enter your choice: ", INTEGER_INPUT));
 
         switch (choice) {
             case 1: createAppointment(); break;
@@ -1647,39 +1449,28 @@ void createAppointment() {
 
     string patient_ID, doctor_ID, date, time;
 
-    cin.clear();
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    cout << "Enter patient ID: ";
-    getline(cin, patient_ID);
+    patient_ID = readInput("Enter patient ID: ");
     while (searchPatientByID(patient_ID) == -1) {
         cout << "Patient not found. Please try again." << endl;
-        cout << "Enter patient ID: ";
-        getline(cin, patient_ID);
+        patient_ID = readInput("Enter patient ID: ");
     }
 
-    cout << "Enter doctor ID: ";
-    getline(cin, doctor_ID);
+    doctor_ID = readInput("Enter doctor ID: ");
     while (searchDoctorByID(doctor_ID) == -1) {
         cout << "Doctor not found. Please try again." << endl;
-        cout << "Enter doctor ID: ";
-        getline(cin, doctor_ID);
+        doctor_ID = readInput("Enter doctor ID: ");
     }
 
-    cout << "Enter date (DD/MM/YYYY): ";
-    getline(cin, date);
+    date = readInput("Enter date (DD/MM/YYYY): ");
     while (dateValidation(date) == false) {
         cout << "Invalid date. Please try again." << endl;
-        cout << "Enter date (DD/MM/YYYY): ";
-        getline(cin, date);
+        date = readInput("Enter date (DD/MM/YYYY): ");
     }
 
-    cout << "Enter time (HH:MM): ";
-    getline(cin, time);
+    time = readInput("Enter time (HH:MM): ");
     while (timeValidation(time) == false) {
         cout << "Invalid time. Please try again." << endl;
-        cout << "Enter time (HH:MM): ";
-        getline(cin, time);
+        time = readInput("Enter time (HH:MM): ");
     }
 
     appointment_record[0][appointment_count] =
@@ -1704,15 +1495,10 @@ void createAppointment() {
 void cancelAppointment() {
     string appointment_ID;
 
-    cin.clear();
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    cout << "Enter appointment ID: ";
-    getline(cin, appointment_ID);
+    appointment_ID = readInput("Enter appointment ID: ");
     while (searchAppointmentByID(appointment_ID) == -1) {
         cout << "Appointment not found. Please try again." << endl;
-        cout << "Enter appointment ID (type 0 to cancel): ";
-        getline(cin, appointment_ID);
+        appointment_ID = readInput("Enter appointment ID (type 0 to cancel): ");
         if (appointment_ID == "0") {
             cout << "Operation cancelled." << endl;
             return;
@@ -1737,15 +1523,10 @@ void modifyAppointment() {
     string appointment_ID;
     int choice;
 
-    cin.clear();
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    cout << "Enter appointment ID: ";
-    getline(cin, appointment_ID);
+    appointment_ID = readInput("Enter appointment ID: ");
     while (searchAppointmentByID(appointment_ID) == -1) {
         cout << "Appointment not found. Please try again." << endl;
-        cout << "Enter appointment ID (type 0 to cancel): ";
-        getline(cin, appointment_ID);
+        appointment_ID = readInput("Enter appointment ID (type 0 to cancel): ");
         if (appointment_ID == "0") {
             cout << "Operation cancelled." << endl;
             return;
@@ -1759,25 +1540,18 @@ void modifyAppointment() {
         cout << "3. Date" << endl;
         cout << "4. Time" << endl;
         cout << "5. Back to Appointment Menu" << endl;
-        cout << "Enter your choice: ";
-
-        cin >> choice;
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        choice = stoi(readInput("Enter your choice: ", INTEGER_INPUT));
 
         switch (choice) {
             case 1: {
-                string patient_ID;
-                cout << "Enter patient ID (type 0 to cancel): ";
-                getline(cin, patient_ID);
+                string patient_ID = readInput("Enter patient ID (type 0 to cancel): ");
                 if (patient_ID == "0") {
                     cout << "Operation cancelled." << endl;
                     return;
                 }
                 while (searchPatientByID(patient_ID) == -1) {
                     cout << "Patient not found. Please try again." << endl;
-                    cout << "Enter patient ID (type 0 to cancel): ";
-                    getline(cin, patient_ID);
+                    patient_ID = readInput("Enter patient ID (type 0 to cancel): ");
                     if (patient_ID == "0") {
                         cout << "Operation cancelled." << endl;
                         return;
@@ -1794,17 +1568,14 @@ void modifyAppointment() {
                 break;
             }
             case 2: {
-                string doctor_ID;
-                cout << "Enter doctor ID (type 0 to cancel): ";
-                getline(cin, doctor_ID);
+                string doctor_ID = readInput("Enter doctor ID (type 0 to cancel): ");
                 if (doctor_ID == "0") {
                     cout << "Operation cancelled." << endl;
                     return;
                 }
                 while (searchDoctorByID(doctor_ID) == -1) {
                     cout << "Doctor not found. Please try again." << endl;
-                    cout << "Enter doctor ID (type 0 to cancel): ";
-                    getline(cin, doctor_ID);
+                    doctor_ID = readInput("Enter doctor ID (type 0 to cancel): ");
                     if (doctor_ID == "0") {
                         cout << "Operation cancelled." << endl;
                         return;
@@ -1822,17 +1593,14 @@ void modifyAppointment() {
             }
 
             case 3: {
-                string date;
-                cout << "Enter date (DD/MM/YYYY) (type 0 to cancel): ";
-                getline(cin, date);
+                string date = readInput("Enter date (DD/MM/YYYY) (type 0 to cancel): ");
                 if (date == "0") {
                     cout << "Operation cancelled." << endl;
                     return;
                 }
                 while (dateValidation(date) == false) {
                     cout << "Invalid date. Please try again." << endl;
-                    cout << "Enter date (DD/MM/YYYY) (type 0 to cancel): ";
-                    getline(cin, date);
+                    date = readInput("Enter date (DD/MM/YYYY) (type 0 to cancel): ");
                     if (date == "0") {
                         cout << "Operation cancelled." << endl;
                         return;
@@ -1850,17 +1618,14 @@ void modifyAppointment() {
             }
 
             case 4: {
-                string time;
-                cout << "Enter time (HH:MM) (type 0 to cancel): ";
-                getline(cin, time);
+                string time = readInput("Enter time (HH:MM) (type 0 to cancel): ");
                 if (time == "0") {
                     cout << "Operation cancelled." << endl;
                     return;
                 }
                 while (timeValidation(time) == false) {
                     cout << "Invalid time. Please try again." << endl;
-                    cout << "Enter time (HH:MM) (type 0 to cancel): ";
-                    getline(cin, time);
+                    time = readInput("Enter time (HH:MM) (type 0 to cancel): ");
                     if (time == "0") {
                         cout << "Operation cancelled." << endl;
                         return;
@@ -1932,7 +1697,7 @@ string generateAppointmentID() {
     }
 
     return "A" + num;
-} 
+}
 
 // Module 4: Reporting Module
 
@@ -1946,52 +1711,34 @@ void reportMenu() {
         cout << "4. Sort Patients By Name" << endl;
         cout << "5. Display Doctor Appointment" << endl;
         cout << "6. Back To Main Menu" << endl;
-        cout << "Enter your choice: ";
-        if (!(cin >> choice)) {
-            cout << "Invalid choice. Please enter a number." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue;
-        }
+        choice = stoi(readInput("Enter your choice: ", INTEGER_INPUT));
         cout << endl;
 
         switch (choice) {
         case 1:
             generateSummaryReport();
-            cout << "\nPress <ENTER> to back to the Report Menu.\n";
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cin.get();
+            readInput("\nPress <ENTER> to back to the Report Menu.\n", TEXT_INPUT, true);
             break;
         case 2:
             generateDetailedReport();
-            cout << "\nPress <ENTER> to back to the Report Menu.\n";
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cin.get();
+            readInput("\nPress <ENTER> to back to the Report Menu.\n", TEXT_INPUT, true);
             break;
         case 3:
             calculateStatistics();
-            cout << "\nPress <ENTER> to back to the Report Menu.\n";
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cin.get();
+            readInput("\nPress <ENTER> to back to the Report Menu.\n", TEXT_INPUT, true);
             break;
         case 4:
             sortPatientsByName();
-            cout << "\nPress <ENTER> to back to the Report Menu.\n";
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cin.get();
+            readInput("\nPress <ENTER> to back to the Report Menu.\n", TEXT_INPUT, true);
             break;
         case 5:
             displayDoctorAppointment();
-            cout << "\nPress <ENTER> to back to the Report Menu.\n";
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cin.get();
+            readInput("\nPress <ENTER> to back to the Report Menu.\n", TEXT_INPUT, true);
             break;
         case 6:
             break;
         default:
-            cout << "Invalid Input. Enter Again." << endl << endl;;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid Input. Enter Again." << endl << endl;
         }
     } while (choice != 6);
 }
