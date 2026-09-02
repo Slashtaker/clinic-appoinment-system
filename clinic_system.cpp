@@ -717,8 +717,8 @@ void addPatient() {
     }
 
     int biggest = 0;
-    for (int i = 0; i < appointment_count; ++i) {
-        int idx = stoi(appointment_record[0][i].id.substr(1));
+    for (int i = 0; i < patient_count; ++i) {
+        int idx = stoi(patient_record[0][i].id.substr(1));
 
         biggest = max(biggest, idx);
     }
@@ -1012,8 +1012,8 @@ void addDoctor(){
     }
 
     int biggest = 0;
-    for (int i = 0; i < appointment_count; ++i) {
-        int idx = stoi(appointment_record[0][i].id.substr(1));
+    for (int i = 0; i < doctor_count; ++i) {
+        int idx = stoi(doctor_record[0][i].id.substr(1));
 
         biggest = max(biggest, idx);
     }
