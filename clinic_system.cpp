@@ -753,12 +753,22 @@ void updatePatient(){
     getline(cin, id);
     while (searchPatientByID(id) == -1){
         if (id.empty()){
-            cout << "ID cannot be empty. Please enter again: ";
+            cout << "ID cannot be empty. Please enter again (type 0 to cancel): ";
             getline(cin, id);
+
+            if (id == "0") {
+                cout << "Operation cancelled." << endl;
+                return;
+            }
         }
         else{
-            cout << "Patient not found. Please enter again: ";
+            cout << "Patient not found. Please enter again (type 0 to cancel): ";
             getline(cin, id);
+
+            if (id == "0") {
+                cout << "Operation cancelled." << endl;
+                return;
+            }
         }
     }
 
@@ -859,12 +869,22 @@ void deletePatient(){
     getline(cin, id);
     while (searchPatientByID(id) == -1){
         if (id.empty()){
-            cout << "ID cannot be empty. Please enter again: ";
+            cout << "ID cannot be empty. Please enter again (type 0 to cancel): ";
             getline(cin, id);
+
+            if (id == "0") {
+                cout << "Operation cancelled." << endl;
+                return;
+            }
         }
         else{
-            cout << "Patient not found. Please enter again: ";
+            cout << "Patient not found. Please enter again (type 0 to cancel): ";
             getline(cin, id);
+
+            if (id == "0") {
+                cout << "Operation cancelled." << endl;
+                return;
+            }
         }
     }
     index = searchPatientByID(id);
@@ -1047,12 +1067,22 @@ void updateDoctor(){
     getline(cin, id);
     while (searchDoctorByID(id) == -1){
         if (id.empty()){
-            cout << "ID cannot be empty. Please enter again: ";
+            cout << "ID cannot be empty. Please enter again (type 0 to cancel): ";
             getline(cin, id);
+
+            if (id == "0") {
+                cout << "Operation cancelled." << endl;
+                return;
+            }
         }
         else{
-            cout << "Doctor not found. Please enter again: ";
+            cout << "Doctor not found. Please enter again (type 0 to cancel): ";
             getline(cin, id);
+
+            if (id == "0") {
+                cout << "Operation cancelled." << endl;
+                return;
+            }
         }
     }
 
@@ -1134,11 +1164,21 @@ void deleteDoctor(){
     getline(cin, id);
     while (searchDoctorByID(id) == -1){
         if (id.empty()){
-            cout << "ID cannot be empty. Please enter again: ";
+            cout << "ID cannot be empty. Please enter again (type 0 to cancel): ";
             getline(cin, id);
+
+            if (id == "0") {
+                cout << "Operation cancelled." << endl;
+                return;
+            }
+
         } else {
-            cout << "Doctor not found. Please enter again: ";
+            cout << "Doctor not found. Please enter again (type 0 to cancel): ";
             getline(cin, id);
+            if (id == "0") {
+                cout << "Operation cancelled." << endl;
+                return;
+            }
         }
     }
     index = searchDoctorByID(id);
@@ -1356,13 +1396,17 @@ void updateMedicine() {
     while (searchMedicineByID(id) == -1) {
 
         if (id.empty()) {
-            cout << "ID cannot be empty. Please enter again: ";
+            cout << "ID cannot be empty. Please enter again (type 0 to cancel): ";
         }
         else {
-            cout << "Medicine not found. Please enter again: ";
+            cout << "Medicine not found. Please enter again (type 0 to cancel): ";
         }
 
         getline(cin, id);
+        if (id == "0") {
+            cout << "Operation cancelled." << endl;
+            return;
+            }
     }
 
     index = searchMedicineByID(id);
@@ -1481,13 +1525,17 @@ void deleteMedicine() {
     while (searchMedicineByID(id) == -1) {
 
         if (id.empty()) {
-            cout << "ID cannot be empty. Please enter again: ";
+            cout << "ID cannot be empty. Please enter again (type 0 to cancel): ";
         }
         else {
-            cout << "Medicine not found. Please enter again: ";
+            cout << "Medicine not found. Please enter again (type 0 to cancel): ";
         }
 
         getline(cin, id);
+        if (id == "0") {
+            cout << "Operation cancelled." << endl;
+            return;
+        }
     }
 
     index = searchMedicineByID(id);
@@ -1663,8 +1711,12 @@ void cancelAppointment() {
     getline(cin, appointment_ID);
     while (searchAppointmentByID(appointment_ID) == -1) {
         cout << "Appointment not found. Please try again." << endl;
-        cout << "Enter appointment ID: ";
+        cout << "Enter appointment ID (type 0 to cancel): ";
         getline(cin, appointment_ID);
+        if (appointment_ID == "0") {
+            cout << "Operation cancelled." << endl;
+            return;
+        }
     }
 
     if (appointment_record[0][searchAppointmentByID(appointment_ID)].status == CANCELLED) {
@@ -1692,8 +1744,12 @@ void modifyAppointment() {
     getline(cin, appointment_ID);
     while (searchAppointmentByID(appointment_ID) == -1) {
         cout << "Appointment not found. Please try again." << endl;
-        cout << "Enter appointment ID: ";
+        cout << "Enter appointment ID (type 0 to cancel): ";
         getline(cin, appointment_ID);
+        if (appointment_ID == "0") {
+            cout << "Operation cancelled." << endl;
+            return;
+        }
     }
 
     do {
@@ -1712,12 +1768,20 @@ void modifyAppointment() {
         switch (choice) {
             case 1: {
                 string patient_ID;
-                cout << "Enter patient ID: ";
+                cout << "Enter patient ID (type 0 to cancel): ";
                 getline(cin, patient_ID);
+                if (patient_ID == "0") {
+                    cout << "Operation cancelled." << endl;
+                    return;
+                }
                 while (searchPatientByID(patient_ID) == -1) {
                     cout << "Patient not found. Please try again." << endl;
-                    cout << "Enter patient ID: ";
+                    cout << "Enter patient ID (type 0 to cancel): ";
                     getline(cin, patient_ID);
+                    if (patient_ID == "0") {
+                        cout << "Operation cancelled." << endl;
+                        return;
+                    }
                 }
 
                 appointment_record[0][searchAppointmentByID(appointment_ID)].patient_id = patient_ID;
@@ -1731,12 +1795,20 @@ void modifyAppointment() {
             }
             case 2: {
                 string doctor_ID;
-                cout << "Enter doctor ID: ";
+                cout << "Enter doctor ID (type 0 to cancel): ";
                 getline(cin, doctor_ID);
+                if (doctor_ID == "0") {
+                    cout << "Operation cancelled." << endl;
+                    return;
+                }
                 while (searchDoctorByID(doctor_ID) == -1) {
                     cout << "Doctor not found. Please try again." << endl;
-                    cout << "Enter doctor ID: ";
+                    cout << "Enter doctor ID (type 0 to cancel): ";
                     getline(cin, doctor_ID);
+                    if (doctor_ID == "0") {
+                        cout << "Operation cancelled." << endl;
+                        return;
+                    }
                 }
 
                 appointment_record[0][searchAppointmentByID(appointment_ID)].doctor_id = doctor_ID;
@@ -1751,12 +1823,20 @@ void modifyAppointment() {
 
             case 3: {
                 string date;
-                cout << "Enter date (DD/MM/YYYY): ";
+                cout << "Enter date (DD/MM/YYYY) (type 0 to cancel): ";
                 getline(cin, date);
+                if (date == "0") {
+                    cout << "Operation cancelled." << endl;
+                    return;
+                }
                 while (dateValidation(date) == false) {
                     cout << "Invalid date. Please try again." << endl;
-                    cout << "Enter date (DD/MM/YYYY): ";
+                    cout << "Enter date (DD/MM/YYYY) (type 0 to cancel): ";
                     getline(cin, date);
+                    if (date == "0") {
+                        cout << "Operation cancelled." << endl;
+                        return;
+                    }
                 }
 
                 appointment_record[0][searchAppointmentByID(appointment_ID)].date = date;
@@ -1771,12 +1851,20 @@ void modifyAppointment() {
 
             case 4: {
                 string time;
-                cout << "Enter time (HH:MM): ";
+                cout << "Enter time (HH:MM) (type 0 to cancel): ";
                 getline(cin, time);
+                if (time == "0") {
+                    cout << "Operation cancelled." << endl;
+                    return;
+                }
                 while (timeValidation(time) == false) {
                     cout << "Invalid time. Please try again." << endl;
-                    cout << "Enter time (HH:MM): ";
+                    cout << "Enter time (HH:MM) (type 0 to cancel): ";
                     getline(cin, time);
+                    if (time == "0") {
+                        cout << "Operation cancelled." << endl;
+                        return;
+                    }
                 }
                 appointment_record[0][searchAppointmentByID(appointment_ID)].time = time;
 
