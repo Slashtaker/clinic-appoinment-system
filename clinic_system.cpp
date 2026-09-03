@@ -191,6 +191,14 @@ int main() {
     LoadData();
 
     do {
+         cout<<R"( 
+ ███  █     ███ █   █ ███  ███      ███  ████  ████   ███  ███ █   █ █████ █   █ █████ █   █ █████     ████ █   █  ████ █████ █████ █   █ 
+█     █      █  ██  █  █  █        █   █ █   █ █   █ █   █  █  ██  █   █   ██ ██ █     ██  █   █      █      █ █  █       █   █     ██ ██ 
+█     █      █  █ █ █  █  █        █████ ████  ████  █   █  █  █ █ █   █   █ █ █ ████  █ █ █   █       ███    █    ███    █   ████  █ █ █ 
+█     █      █  █  ██  █  █        █   █ █     █     █   █  █  █  ██   █   █   █ █     █  ██   █          █   █       █   █   █     █   █ 
+ ███  █████ ███ █   █ ███  ███     █   █ █     █      ███  ███ █   █   █   █   █ █████ █   █   █      ████    █   ████    █   █████ █   █ )";
+
+        cout << endl;
         displayMainMenu();
         choice = stoi(readInput("Enter your choice: ", INTEGER_INPUT));
 
@@ -647,6 +655,13 @@ void patientMenu() {
     int choice = 0;
 
     do {
+        cout<<R"(
+████   ███  █████ ███ █████ █   █ █████    █   █  ███  █   █  ███   ███  █████ █   █ █████ █   █ █████ 
+█   █ █   █   █    █  █     ██  █   █      ██ ██ █   █ ██  █ █   █ █     █     ██ ██ █     ██  █   █   
+████  █████   █    █  ████  █ █ █   █      █ █ █ █████ █ █ █ █████ █  ██ ████  █ █ █ ████  █ █ █   █   
+█     █   █   █    █  █     █  ██   █      █   █ █   █ █  ██ █   █ █   █ █     █   █ █     █  ██   █   
+█     █   █   █   ███ █████ █   █   █      █   █ █   █ █   █ █   █  ███  █████ █   █ █████ █   █   █   )";
+        cout << endl;
         displayHeader("Patient Management");
 
         cout << "1. Add Patient" << endl;
@@ -908,6 +923,14 @@ void doctorMenu() {
     int choice = 0;
 
     do {
+        cout<<R"(
+████   ███   ███  █████  ███  ████     █   █  ███  █   █  ███   ███  █████ █   █ █████ █   █ █████ 
+█   █ █   █ █       █   █   █ █   █    ██ ██ █   █ ██  █ █   █ █     █     ██ ██ █     ██  █   █   
+█   █ █   █ █       █   █   █ ████     █ █ █ █████ █ █ █ █████ █  ██ ████  █ █ █ ████  █ █ █   █   
+█   █ █   █ █       █   █   █ █  █     █   █ █   █ █  ██ █   █ █   █ █     █   █ █     █  ██   █   
+████   ███   ███    █    ███  █   █    █   █ █   █ █   █ █   █  ███  █████ █   █ █████ █   █   █    )";
+        cout << endl;
+        displayHeader("Doctor Management");
         cout << "1. Add Doctor" << endl;
         cout << "2. Update Doctor" << endl;
         cout << "3. Delete Doctor" << endl;
@@ -1122,7 +1145,15 @@ void medicineMenu() {
     int choice = 0;
 
     do {
-
+        cout<<R"(
+█   █ █████ ████  ███  ███  ███ █   █ █████    █   █  ███  █   █  ███   ███  █████ █   █ █████ █   █ █████ 
+██ ██ █     █   █  █  █      █  ██  █ █        ██ ██ █   █ ██  █ █   █ █     █     ██ ██ █     ██  █   █   
+█ █ █ ████  █   █  █  █      █  █ █ █ ████     █ █ █ █████ █ █ █ █████ █  ██ ████  █ █ █ ████  █ █ █   █   
+█   █ █     █   █  █  █      █  █  ██ █        █   █ █   █ █  ██ █   █ █   █ █     █   █ █     █  ██   █   
+█   █ █████ ████  ███  ███  ███ █   █ █████    █   █ █   █ █   █ █   █  ███  █████ █   █ █████ █   █   █     )";
+        cout << endl;
+        displayHeader("Medicine Management");
+        cout << endl;
         cout << "1. Add Medicine" << endl;
         cout << "2. Update Medicine" << endl;
         cout << "3. Delete Medicine" << endl;
@@ -1417,11 +1448,18 @@ void displayAllMedicines() {
 // Module 3: Appointment Booking
 
 void appointmentMenu() {
-    displayHeader("Appointment Management");
-
     int choice = 0;
 
     do {
+        cout<<R"(
+ ███  ████  ████   ███  ███ █   █ █████ █   █ █████ █   █ █████    █   █  ███  █   █  ███   ███  █████ █   █ █████ █   █ █████ 
+█   █ █   █ █   █ █   █  █  ██  █   █   ██ ██ █     ██  █   █      ██ ██ █   █ ██  █ █   █ █     █     ██ ██ █     ██  █   █   
+█████ ████  ████  █   █  █  █ █ █   █   █ █ █ ████  █ █ █   █      █ █ █ █████ █ █ █ █████ █  ██ ████  █ █ █ ████  █ █ █   █   
+█   █ █     █     █   █  █  █  ██   █   █   █ █     █  ██   █      █   █ █   █ █  ██ █   █ █   █ █     █   █ █     █  ██   █   
+█   █ █     █      ███  ███ █   █   █   █   █ █████ █   █   █      █   █ █   █ █   █ █   █  ███  █████ █   █ █████ █   █   █       )";
+        cout << endl;
+        displayHeader("Appointment Management");
+
         cout << "1. Create Appointment" << endl;
         cout << "2. Cancel Appointment" << endl;
         cout << "3. Modify Appointment" << endl;
@@ -1704,6 +1742,14 @@ string generateAppointmentID() {
 void reportMenu() {
     int choice = 0;
     do {
+        cout<<R"(
+████  █████ ████   ███  ████  █████ ███ █   █  ███      ████ █   █  ████ █████ █████ █   █ 
+█   █ █     █   █ █   █ █   █   █    █  ██  █ █        █      █ █  █       █   █     ██ ██ 
+████  ████  ████  █   █ ████    █    █  █ █ █ █  ██     ███    █    ███    █   ████  █ █ █ 
+█  █  █     █     █   █ █  █    █    █  █  ██ █   █        █   █       █   █   █     █   █ 
+█   █ █████ █      ███  █   █   █   ███ █   █  ███     ████    █   ████    █   █████ █   █       )";
+        cout << endl;
+
         displayHeader("REPORTING SYSTEM");
         cout << "1. Summary Report" << endl;
         cout << "2. Detailed Report" << endl;
