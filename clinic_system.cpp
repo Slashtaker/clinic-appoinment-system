@@ -2,66 +2,11 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
-
-
 #include <sstream>
 
 using namespace std;
 
 enum InputType { TEXT_INPUT, INTEGER_INPUT, DECIMAL_INPUT, CHARACTER_INPUT };
-
-// Reads one complete line, rejects empty input, and validates numeric values.
-string readInput(const string& prompt, InputType inputType = TEXT_INPUT,
-                 bool allowEmpty = false) {
-    while (true) {
-        cout << prompt;
-
-        string input;
-        getline(cin, input);
-
-        if (input.empty() && !allowEmpty) {
-            cout << "Input cannot be empty. Please try again." << endl;
-            continue;
-        }
-
-        if (inputType == TEXT_INPUT) {
-            return input;
-        }
-
-        stringstream inputStream(input);
-        char extraCharacter;
-
-        if (inputType == INTEGER_INPUT) {
-            int value;
-            if (!(inputStream >> value) || inputStream >> extraCharacter) {
-                cout << "Invalid whole number. Please try again." << endl;
-                continue;
-            }
-            if (value < 0) {
-                cout << "Negative values are not allowed. Please try again." << endl;
-                continue;
-            }
-        }
-        else if (inputType == DECIMAL_INPUT) {
-            double value;
-            if (!(inputStream >> value) || inputStream >> extraCharacter) {
-                cout << "Invalid number. Please try again." << endl;
-                continue;
-            }
-            if (value < 0) {
-                cout << "Negative values are not allowed. Please try again." << endl;
-                continue;
-            }
-        }
-        else if (inputType == CHARACTER_INPUT && input.length() != 1) {
-            cout << "Please enter one character." << endl;
-            continue;
-        }
-
-        return input;
-    }
-}
-
 enum Gender { MALE, FEMALE };
 enum Status { ASSIGNED, CANCELLED };
 enum File_Type { PATIENT, DOCTOR, MEDICINE, APPOINTMENT};
@@ -172,8 +117,8 @@ void displayDoctorAppointment();
 void displayMainMenu();
 
 //Utilities tool
-void SimpleCsvParser(string& line, File_Type file_type,
-                     string fields[1][MAX_FIELDS], int& field_count);
+string readInput(const string& prompt, InputType inputType = TEXT_INPUT, bool allowEmpty = false);
+void SimpleCsvParser(string& line, File_Type file_type,string fields[1][MAX_FIELDS], int& field_count);
 void displayHeader(const string& title);
 bool dateValidation(const string& date);
 bool timeValidation(const string& time);
@@ -191,11 +136,11 @@ int main() {
     LoadData();
 
     do {
-         cout<<R"( 
- ███  █     ███ █   █ ███  ███      ███  ████  ████   ███  ███ █   █ █████ █   █ █████ █   █ █████     ████ █   █  ████ █████ █████ █   █ 
-█     █      █  ██  █  █  █        █   █ █   █ █   █ █   █  █  ██  █   █   ██ ██ █     ██  █   █      █      █ █  █       █   █     ██ ██ 
-█     █      █  █ █ █  █  █        █████ ████  ████  █   █  █  █ █ █   █   █ █ █ ████  █ █ █   █       ███    █    ███    █   ████  █ █ █ 
-█     █      █  █  ██  █  █        █   █ █     █     █   █  █  █  ██   █   █   █ █     █  ██   █          █   █       █   █   █     █   █ 
+         cout<<R"(
+ ███  █     ███ █   █ ███  ███      ███  ████  ████   ███  ███ █   █ █████ █   █ █████ █   █ █████     ████ █   █  ████ █████ █████ █   █
+█     █      █  ██  █  █  █        █   █ █   █ █   █ █   █  █  ██  █   █   ██ ██ █     ██  █   █      █      █ █  █       █   █     ██ ██
+█     █      █  █ █ █  █  █        █████ ████  ████  █   █  █  █ █ █   █   █ █ █ ████  █ █ █   █       ███    █    ███    █   ████  █ █ █
+█     █      █  █  ██  █  █        █   █ █     █     █   █  █  █  ██   █   █   █ █     █  ██   █          █   █       █   █   █     █   █
  ███  █████ ███ █   █ ███  ███     █   █ █     █      ███  ███ █   █   █   █   █ █████ █   █   █      ████    █   ████    █   █████ █   █ )";
 
         cout << endl;
@@ -234,6 +179,58 @@ void displayMainMenu() {
 }
 
 // Utilities tool
+
+// Reads one complete line, rejects empty input, and validates numeric values.
+string readInput(const string& prompt, InputType inputType, bool allowEmpty) {
+    while (true) {
+        cout << prompt;
+
+        string input;
+        getline(cin, input);
+
+        if (input.empty() && !allowEmpty) {
+            cout << "Input cannot be empty. Please try again." << endl;
+            continue;
+        }
+
+        if (inputType == TEXT_INPUT) {
+            return input;
+        }
+
+        stringstream inputStream(input);
+        char extraCharacter;
+
+        if (inputType == INTEGER_INPUT) {
+            int value;
+            if (!(inputStream >> value) || inputStream >> extraCharacter) {
+                cout << "Invalid whole number. Please try again." << endl;
+                continue;
+            }
+            if (value < 0) {
+                cout << "Negative values are not allowed. Please try again." << endl;
+                continue;
+            }
+        }
+        else if (inputType == DECIMAL_INPUT) {
+            double value;
+            if (!(inputStream >> value) || inputStream >> extraCharacter) {
+                cout << "Invalid number. Please try again." << endl;
+                continue;
+            }
+            if (value < 0) {
+                cout << "Negative values are not allowed. Please try again." << endl;
+                continue;
+            }
+        }
+        else if (inputType == CHARACTER_INPUT && input.length() != 1) {
+            cout << "Please enter one character." << endl;
+            continue;
+        }
+
+        return input;
+    }
+}
+
 void SimpleCsvParser(string& line, File_Type file_type,
                      string fields[1][MAX_FIELDS], int& field_count) {
     field_count = 0;
@@ -656,10 +653,10 @@ void patientMenu() {
 
     do {
         cout<<R"(
-████   ███  █████ ███ █████ █   █ █████    █   █  ███  █   █  ███   ███  █████ █   █ █████ █   █ █████ 
-█   █ █   █   █    █  █     ██  █   █      ██ ██ █   █ ██  █ █   █ █     █     ██ ██ █     ██  █   █   
-████  █████   █    █  ████  █ █ █   █      █ █ █ █████ █ █ █ █████ █  ██ ████  █ █ █ ████  █ █ █   █   
-█     █   █   █    █  █     █  ██   █      █   █ █   █ █  ██ █   █ █   █ █     █   █ █     █  ██   █   
+████   ███  █████ ███ █████ █   █ █████    █   █  ███  █   █  ███   ███  █████ █   █ █████ █   █ █████
+█   █ █   █   █    █  █     ██  █   █      ██ ██ █   █ ██  █ █   █ █     █     ██ ██ █     ██  █   █
+████  █████   █    █  ████  █ █ █   █      █ █ █ █████ █ █ █ █████ █  ██ ████  █ █ █ ████  █ █ █   █
+█     █   █   █    █  █     █  ██   █      █   █ █   █ █  ██ █   █ █   █ █     █   █ █     █  ██   █
 █     █   █   █   ███ █████ █   █   █      █   █ █   █ █   █ █   █  ███  █████ █   █ █████ █   █   █   )";
         cout << endl;
         displayHeader("Patient Management");
@@ -924,10 +921,10 @@ void doctorMenu() {
 
     do {
         cout<<R"(
-████   ███   ███  █████  ███  ████     █   █  ███  █   █  ███   ███  █████ █   █ █████ █   █ █████ 
-█   █ █   █ █       █   █   █ █   █    ██ ██ █   █ ██  █ █   █ █     █     ██ ██ █     ██  █   █   
-█   █ █   █ █       █   █   █ ████     █ █ █ █████ █ █ █ █████ █  ██ ████  █ █ █ ████  █ █ █   █   
-█   █ █   █ █       █   █   █ █  █     █   █ █   █ █  ██ █   █ █   █ █     █   █ █     █  ██   █   
+████   ███   ███  █████  ███  ████     █   █  ███  █   █  ███   ███  █████ █   █ █████ █   █ █████
+█   █ █   █ █       █   █   █ █   █    ██ ██ █   █ ██  █ █   █ █     █     ██ ██ █     ██  █   █
+█   █ █   █ █       █   █   █ ████     █ █ █ █████ █ █ █ █████ █  ██ ████  █ █ █ ████  █ █ █   █
+█   █ █   █ █       █   █   █ █  █     █   █ █   █ █  ██ █   █ █   █ █     █   █ █     █  ██   █
 ████   ███   ███    █    ███  █   █    █   █ █   █ █   █ █   █  ███  █████ █   █ █████ █   █   █    )";
         cout << endl;
         displayHeader("Doctor Management");
@@ -1146,10 +1143,10 @@ void medicineMenu() {
 
     do {
         cout<<R"(
-█   █ █████ ████  ███  ███  ███ █   █ █████    █   █  ███  █   █  ███   ███  █████ █   █ █████ █   █ █████ 
-██ ██ █     █   █  █  █      █  ██  █ █        ██ ██ █   █ ██  █ █   █ █     █     ██ ██ █     ██  █   █   
-█ █ █ ████  █   █  █  █      █  █ █ █ ████     █ █ █ █████ █ █ █ █████ █  ██ ████  █ █ █ ████  █ █ █   █   
-█   █ █     █   █  █  █      █  █  ██ █        █   █ █   █ █  ██ █   █ █   █ █     █   █ █     █  ██   █   
+█   █ █████ ████  ███  ███  ███ █   █ █████    █   █  ███  █   █  ███   ███  █████ █   █ █████ █   █ █████
+██ ██ █     █   █  █  █      █  ██  █ █        ██ ██ █   █ ██  █ █   █ █     █     ██ ██ █     ██  █   █
+█ █ █ ████  █   █  █  █      █  █ █ █ ████     █ █ █ █████ █ █ █ █████ █  ██ ████  █ █ █ ████  █ █ █   █
+█   █ █     █   █  █  █      █  █  ██ █        █   █ █   █ █  ██ █   █ █   █ █     █   █ █     █  ██   █
 █   █ █████ ████  ███  ███  ███ █   █ █████    █   █ █   █ █   █ █   █  ███  █████ █   █ █████ █   █   █     )";
         cout << endl;
         displayHeader("Medicine Management");
@@ -1452,10 +1449,10 @@ void appointmentMenu() {
 
     do {
         cout<<R"(
- ███  ████  ████   ███  ███ █   █ █████ █   █ █████ █   █ █████    █   █  ███  █   █  ███   ███  █████ █   █ █████ █   █ █████ 
-█   █ █   █ █   █ █   █  █  ██  █   █   ██ ██ █     ██  █   █      ██ ██ █   █ ██  █ █   █ █     █     ██ ██ █     ██  █   █   
-█████ ████  ████  █   █  █  █ █ █   █   █ █ █ ████  █ █ █   █      █ █ █ █████ █ █ █ █████ █  ██ ████  █ █ █ ████  █ █ █   █   
-█   █ █     █     █   █  █  █  ██   █   █   █ █     █  ██   █      █   █ █   █ █  ██ █   █ █   █ █     █   █ █     █  ██   █   
+ ███  ████  ████   ███  ███ █   █ █████ █   █ █████ █   █ █████    █   █  ███  █   █  ███   ███  █████ █   █ █████ █   █ █████
+█   █ █   █ █   █ █   █  █  ██  █   █   ██ ██ █     ██  █   █      ██ ██ █   █ ██  █ █   █ █     █     ██ ██ █     ██  █   █
+█████ ████  ████  █   █  █  █ █ █   █   █ █ █ ████  █ █ █   █      █ █ █ █████ █ █ █ █████ █  ██ ████  █ █ █ ████  █ █ █   █
+█   █ █     █     █   █  █  █  ██   █   █   █ █     █  ██   █      █   █ █   █ █  ██ █   █ █   █ █     █   █ █     █  ██   █
 █   █ █     █      ███  ███ █   █   █   █   █ █████ █   █   █      █   █ █   █ █   █ █   █  ███  █████ █   █ █████ █   █   █       )";
         cout << endl;
         displayHeader("Appointment Management");
@@ -1743,10 +1740,10 @@ void reportMenu() {
     int choice = 0;
     do {
         cout<<R"(
-████  █████ ████   ███  ████  █████ ███ █   █  ███      ████ █   █  ████ █████ █████ █   █ 
-█   █ █     █   █ █   █ █   █   █    █  ██  █ █        █      █ █  █       █   █     ██ ██ 
-████  ████  ████  █   █ ████    █    █  █ █ █ █  ██     ███    █    ███    █   ████  █ █ █ 
-█  █  █     █     █   █ █  █    █    █  █  ██ █   █        █   █       █   █   █     █   █ 
+████  █████ ████   ███  ████  █████ ███ █   █  ███      ████ █   █  ████ █████ █████ █   █
+█   █ █     █   █ █   █ █   █   █    █  ██  █ █        █      █ █  █       █   █     ██ ██
+████  ████  ████  █   █ ████    █    █  █ █ █ █  ██     ███    █    ███    █   ████  █ █ █
+█  █  █     █     █   █ █  █    █    █  █  ██ █   █        █   █       █   █   █     █   █
 █   █ █████ █      ███  █   █   █   ███ █   █  ███     ████    █   ████    █   █████ █   █       )";
         cout << endl;
 
